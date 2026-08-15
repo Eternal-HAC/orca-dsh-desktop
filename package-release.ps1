@@ -7,7 +7,7 @@ $dist = Join-Path $root "dist"
 $appDir = Join-Path $dist "DeepSeekHarness"
 if (-not (Test-Path (Join-Path $appDir "DeepSeekHarness.exe"))) {
     Write-Host "未找到构建产物，自动运行 build.ps1 ..."
-    & "$root\build.ps1"
+    & "$root\build.ps1" -Version $Version
     if ($LASTEXITCODE -ne 0) { throw "build.ps1 失败" }
 }
 $zip = Join-Path $dist "DeepSeekHarness-Desktop-v$Version-win-x64.zip"

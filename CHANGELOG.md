@@ -20,6 +20,7 @@
 - **导航失败提示与错误落盘**：WebView2 初始化失败时弹一次友好提示；原始异常同时写入 `dsh-app-error.log` 便于排查。
 - **一键安装脚本**：发布包内置 `install.bat` / `uninstall.bat`，双击即在桌面与开始菜单创建/移除 `DeepSeek Harness` 快捷方式，无需管理员权限（调用系统 `WScript.Shell` 生成 `.lnk`，零额外依赖）。
 - **CI 手动一键发布**：`.github/workflows/release.yml` 新增 `workflow_dispatch` 的 `version` 输入，在 Actions 页面填版本号即可构建并发布，无需先打 tag。
+- **NSIS 安装包（Setup.exe）**：构建流程新增 `installer.nsi` 与第 6 步，自动下载 NSIS 并编译出 `DeepSeekHarness-Setup-vX.Y.Z-win-x64.exe`。用户双击按向导安装到用户目录（无需管理员权限），自动创建桌面/开始菜单快捷方式并注册到「添加/删除程序」，可在系统设置中一键卸载；CI 同时上传 zip 与 Setup.exe 两种产物。
 
 ### 变更 (Changed)
 - **构建自动化**：`build.ps1` 在未检测到 `pnpm` 时自动 `corepack enable` / `npm i -g pnpm` 兜底，省去「先装 pnpm」这一步。

@@ -30,11 +30,13 @@ jobs:
         with:
           version: 11
 
-      - name: Build
+      - name: Install NSIS
+        # CI 环境预装 makensis，供 build.ps1 第 6 步编译 Setup.exe 使用。
         shell: pwsh
-        run: ./build.ps1
+        run: choco install nsis --no-progress -y
 
-      - name: Package
+      - name: Resolve version
+        id: ver
         shell: pwsh
         run: |
           if ($env:GITHUB_REF_TYPE -eq 'tag') {
@@ -42,9 +44,19 @@ jobs:
           } else {
             $v = '${{ inputs.version }}'
           }
-          ./package-release.ps1 -Version $v
+          echo "version=$v" >> $env:GITHUB_OUTPUT
 
-      - name: Upload release asset
+      - name: Build
+        shell: pwsh
+        run: ./build.ps1 -Version ${{ steps.ver.outputs.version }}
+
+      - name: Package
+        shell: pwsh
+        run: ./package-release.ps1 -Version ${{ steps.ver.outputs.version }}
+
+      - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/DeepSeekHarness-Desktop-*.zip
+          files: |
+            dist/DeepSeekHarness-Desktop-*.zip
+            dist/DeepSeekHarness-Setup-*.exe

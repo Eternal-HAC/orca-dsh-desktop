@@ -2,7 +2,8 @@
 # 用法: ./build.ps1  （需要联网；Windows PowerShell / pwsh）
 param(
     [string]$DshVersion = "0.1.0-rc.6",
-    [string]$WebView2Version = "1.0.4129.50"
+    [string]$WebView2Version = "1.0.4129.50",
+    [string]$Version = "0.2.0"
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -12,7 +13,7 @@ $buildDir = Join-Path $root "dist\_dsh-build"
 New-Item -ItemType Directory -Force -Path $dist, $lib, $buildDir | Out-Null
 
 # ---------- 1. node.exe ----------
-Write-Host "==> [1/5] node.exe"
+Write-Host "==> [1/6] node.exe"
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
 if ($nodeCmd) {
     Copy-Item -LiteralPath $nodeCmd.Source -Destination (Join-Path $dist "node.exe") -Force
@@ -30,7 +31,7 @@ if ($nodeCmd) {
 }
 
 # ---------- 2. WebView2 程序集 ----------
-Write-Host "==> [2/5] WebView2 assemblies"
+Write-Host "==> [2/6] WebView2 assemblies"
 $coreDll = Join-Path $lib "Microsoft.Web.WebView2.Core.dll"
 if (-not (Test-Path $coreDll)) {
     $nupkg = Join-Path $lib "webview2.nupkg"
@@ -48,7 +49,7 @@ Copy-Item -LiteralPath (Join-Path $lib "Microsoft.Web.WebView2.WinForms.dll") -D
 Copy-Item -LiteralPath (Join-Path $lib "WebView2Loader.dll") -Destination $dist -Force
 
 # ---------- 3. dsh 依赖（扁平布局 node_modules） ----------
-Write-Host "==> [3/5] dsh dependencies (node-linker=hoisted)"
+Write-Host "==> [3/6] dsh dependencies (node-linker=hoisted)"
 $pkg = @{
     name = "dsh-build"; private = $true
     dependencies = @{ "@deepseek-ai/dsh" = $DshVersion }
@@ -92,7 +93,7 @@ Write-Host "    copying node_modules ..."
 Copy-Item -LiteralPath (Join-Path $buildDir "node_modules") -Destination (Join-Path $dist "node_modules") -Recurse -Force
 
 # ---------- 4. 编译 exe ----------
-Write-Host "==> [4/5] compile DeepSeekHarness.exe"
+Write-Host "==> [4/6] compile DeepSeekHarness.exe"
 $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 if (-not (Test-Path $csc)) { $csc = (Get-Command csc -ErrorAction SilentlyContinue).Source }
 if (-not $csc) { throw "未找到 csc.exe（需要 .NET Framework 4.8，Windows 自带）" }
@@ -107,7 +108,7 @@ if ($LASTEXITCODE -ne 0) { throw "csc 编译失败" }
 Copy-Item -LiteralPath (Join-Path $root "icons\DeepSeekHarness.ico") -Destination (Join-Path $dist "DeepSeekHarness.ico") -Force
 
 # ---------- 5. 使用说明 ----------
-Write-Host "==> [5/5] write 使用说明.txt"
+Write-Host "==> [5/6] write 使用说明.txt"
 @"
 DeepSeek Harness 桌面版
 ========================
@@ -122,11 +123,51 @@ DeepSeek Harness 桌面版
 "@ | Set-Content -Encoding utf8 -Path (Join-Path $dist "使用说明.txt")
 
 # ---------- 5b. 一键安装 / 卸载脚本 ----------
-Write-Host "==> [5/5] copy install.bat / uninstall.bat"
+Write-Host "==> [5b] copy install.bat / uninstall.bat"
 foreach ($f in @("install.bat", "uninstall.bat")) {
     $src = Join-Path $root $f
     if (Test-Path $src) { Copy-Item -LiteralPath $src -Destination $dist -Force }
 }
+
+# ---------- 6. NSIS 安装包 ----------
+Write-Host "==> [6/6] NSIS installer (Setup.exe)"
+$nsisDir = Join-Path $root "dist\_nsis"
+$nsisExe = Join-Path $nsisDir "makensis.exe"
+if (-not (Test-Path $nsisExe)) {
+    $nsis = Get-Command makensis -ErrorAction SilentlyContinue
+    if ($nsis) {
+        $nsisExe = $nsis.Source
+        Write-Host "    使用 PATH 中的 makensis: $nsisExe"
+    } else {
+        Write-Host "    未检测到 makensis，下载 NSIS 便携版 ..."
+        $nsisVer = "3.11"
+        $nsisZip = Join-Path $env:TEMP "nsis-$nsisVer.zip"
+        $urls = @(
+            "https://sourceforge.net/projects/nsis/files/NSIS%203/$nsisVer/nsis-$nsisVer.zip/download",
+            "https://github.com/negrutiu/nsis/releases/download/v0.0.1/nsis-$nsisVer.zip"
+        )
+        $ok = $false
+        foreach ($u in $urls) {
+            try {
+                Invoke-WebRequest -Uri $u -OutFile $nsisZip -TimeoutSec 120 -ErrorAction Stop
+                if ((Get-Item $nsisZip).Length -gt 100KB) { $ok = $true; break }
+            } catch { Write-Host "    下载失败: $u" }
+        }
+        if (-not $ok) { throw "NSIS 下载失败，请手动安装 NSIS 后重试（https://nsis.sourceforge.io/）。" }
+        Expand-Archive -LiteralPath $nsisZip -DestinationPath $nsisDir -Force
+        # NSIS 压缩包顶层文件夹为 nsis-3.11/
+        $extracted = Join-Path $nsisDir "nsis-$nsisVer"
+        if (Test-Path (Join-Path $extracted "makensis.exe")) {
+            Get-ChildItem $extracted | ForEach-Object { Move-Item $_.FullName -Destination $nsisDir -Force }
+            Remove-Item $extracted -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+if (-not (Test-Path $nsisExe)) { throw "未找到 makensis.exe" }
+$outExe = Join-Path $root "dist\DeepSeekHarness-Setup-v$Version-win-x64.exe"
+& $nsisExe "/DVERSION=$Version" "/DAPP_SOURCE=$dist" "/DOUT=$outExe" "$root\installer.nsi"
+if ($LASTEXITCODE -ne 0) { throw "NSIS 编译失败" }
+Write-Host "    已生成: $outExe"
 
 Write-Host ""
 Write-Host "构建完成: $dist"

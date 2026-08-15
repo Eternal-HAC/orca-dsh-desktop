@@ -32,16 +32,16 @@
 
 从 [Releases 页面](https://github.com/baiqingyuan/deepseek-harness/releases) 下载最新版：
 
-- `DeepSeekHarness-Desktop-vX.Y.Z-win-x64.zip`（便携版，约 110 MB）
+- `DeepSeekHarness-Setup-vX.Y.Z-win-x64.exe`（**推荐**：双击按向导安装，自动创建桌面/开始菜单快捷方式，可在系统设置中一键卸载，无需管理员权限）
+- `DeepSeekHarness-Desktop-vX.Y.Z-win-x64.zip`（便携版，约 110 MB，解压即用）
 
 ## 🚀 使用
 
-1. 下载并解压 zip（整个文件夹一起解压，不要只拖 exe 出来）
-2. **一键安装**：双击 `install.bat`，自动在桌面与开始菜单创建 `DeepSeek Harness` 快捷方式（无需管理员权限）
-   - 或直接双击 `DeepSeekHarness.exe` 立即运行（便携模式）
+1. **推荐**：下载 `DeepSeekHarness-Setup-vX.Y.Z-win-x64.exe`，双击按向导安装（默认装到用户目录，无需管理员权限），桌面与开始菜单自动出现 `DeepSeek Harness` 快捷方式；卸载在「设置 → 应用」里一键完成。
+2. 或下载便携版 zip → 解压（整个文件夹一起解压）→ 双击 `install.bat` 一键创建快捷方式，也可直接双击 `DeepSeekHarness.exe` 运行。
 3. 首次打开在界面中配置你的 **DeepSeek API Key**
 4. 关闭窗口即停止服务
-5. 如需卸载：运行 `uninstall.bat` 删除快捷方式，再删除整个文件夹即可
+5. 便携版如需卸载：运行 `uninstall.bat` 删除快捷方式，再删除整个文件夹即可
 
 **系统要求**：Windows 10/11 x64（内置 .NET Framework 4.8 与 WebView2 运行时）
 
@@ -65,8 +65,9 @@
 ```
 src/App.cs          桌面壳源码（C# WinForms + WebView2）
 src/BUILD.md        手工编译说明
-build.ps1           一键构建
+build.ps1           一键构建（含 NSIS 安装包编译，缺失时自动下载 NSIS）
 package-release.ps1 打包 zip
+installer.nsi       NSIS 安装包脚本（由 build.ps1 调用，生成 Setup.exe）
 assets/cover.png    仓库封面
 icons/              应用图标
 dist/               构建产物（不入库）
