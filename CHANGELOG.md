@@ -4,9 +4,11 @@
 
 ## [Unreleased]
 
-## [0.2.0]
+## [0.2.0] - 2026-08-16
 
 > 面向「开箱即用、少部署、少求助」的一次集中打磨：修复了桌面壳的多处运行时缺陷，并大幅简化构建与发布流程。
+
+> **已发布**：[Release v0.2.0](https://github.com/baiqingyuan/deepseek-harness-Desktop--/releases/tag/v0.2.0) 包含两个产物 —— `DeepSeekHarness-Desktop-v0.2.0-win-x64.zip`（便携版）与 `DeepSeekHarness-Setup-v0.2.0-win-x64.exe`（NSIS 安装包）。CI 已构建验证（`build.ps1` 第 6 步 NSIS 定位修复见 `bbb2599`）。
 
 ### 修复 (Fixed)
 - **启动期界面卡死（白屏）**：原 `StartServerIfNeeded()` 在 UI 线程同步 `Thread.Sleep` 等待 dsh 服务，最长冻结 90 秒。改为 `async/await + Task.Delay`，启动期间窗口可响应并显示「正在启动本地服务…（已等待 N 秒）」加载提示。
@@ -34,3 +36,24 @@
 - 自包含发布包：内置 Node.js 运行时与 `node_modules`，用户无需安装 Node/pnpm。
 - 端口探测与异常残留接管清理；WebView2 E_ABORT 重试机制。
 - 构建脚本：`build.ps1`、`package-release.ps1`、GitHub Actions 自动构建发布。
+
+---
+
+## Roadmap（下个版本规划，待确认）
+
+> 以下为候选方向，按「用户价值 / 工作量」粗略排序，**非承诺清单**。实施前请确认优先级与上游 `@deepseek-ai/dsh` 的能力边界。
+
+### 高优先（体验与可信度）
+- **代码签名 / SmartScreen 免警告**：当前 `Setup.exe` 与 `exe` 无签名，Windows 会报「未知发布者」。引入签名（需代码签名证书，可用免费 `signtool` + 自签/受信 CA）消除拦截，显著提升普通用户安装成功率。
+- **托盘常驻 + 最小化到托盘**：关闭窗口改为「最小化到系统托盘」而非直接停服务，点托盘图标恢复；避免误关后重等启动。可配套「真正退出」菜单项。
+- **升级 dsh 到稳定版**：`build.ps1` 固定 `DshVersion = 0.1.0-rc.6`（RC）。核查上游是否已发布正式版并跟进，减少 RC 不稳定带来的偶发问题。
+
+### 中优先（自助与运维）
+- **自动更新（Self-update）**：发布后用户无需手动回 Releases。新增「检查更新」+ 一键下载安装包（或静默调用 Setup.exe 覆盖安装）。
+- **诊断面板**：把 `dsh-app-error.log` 做成可视化入口，支持「一键打开日志目录 / 导出」。
+- **API Key 安全存储**：如 dsh 支持从环境变量或配置文件读取 Key，由 shell 预填并从 Windows 凭据管理器安全读取，避免每次重配。
+
+### 低优先（扩展）
+- **ARM64 构建**：当前仅 `win-x64`，增加 `win-arm64` 产物（需 NSIS arm64 与 node arm64 支持）。
+- **卸载时彻底清理**：确保卸载流程杀净端口占用与残留进程。
+- **中文本地化收尾**：界面/提示全中文化核查（部分点已在 v0.2.0 完成）。
