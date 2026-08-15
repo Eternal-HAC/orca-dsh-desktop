@@ -18,6 +18,7 @@
 - **友好的缺失文件提示**：`node.exe` 或 dsh 文件被杀软误删时，提示文案改为中文并指明去 GitHub Releases 下载完整包。
 - **端口占用明确提示**：端口 `3080` 被非本应用进程占用时，明确提示「端口被占用，请关闭占用程序后重试」，避免静默显示他人内容。
 - **导航失败提示与错误落盘**：WebView2 初始化失败时弹一次友好提示；原始异常同时写入 `dsh-app-error.log` 便于排查。
+- **一键安装脚本**：发布包内置 `install.bat` / `uninstall.bat`，双击即在桌面与开始菜单创建/移除 `DeepSeek Harness` 快捷方式，无需管理员权限（调用系统 `WScript.Shell` 生成 `.lnk`，零额外依赖）。
 - **CI 手动一键发布**：`.github/workflows/release.yml` 新增 `workflow_dispatch` 的 `version` 输入，在 Actions 页面填版本号即可构建并发布，无需先打 tag。
 
 ### 变更 (Changed)

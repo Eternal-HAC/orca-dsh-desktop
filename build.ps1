@@ -111,13 +111,22 @@ Write-Host "==> [5/5] write 使用说明.txt"
 @"
 DeepSeek Harness 桌面版
 ========================
-1. 双击 DeepSeekHarness.exe
+1. 双击 DeepSeekHarness.exe 即可使用
+   （或双击「install.bat / 一键安装.bat」自动在桌面与开始菜单创建快捷方式）
 2. 首次打开请在界面中配置 DeepSeek API Key
 3. 关闭窗口即停止服务
 
 系统要求：Windows 10/11 x64（自带 .NET Framework 4.8 与 WebView2 运行时）。
 请保持整个文件夹完整（node.exe / node_modules / DLL 与 exe 同目录），不要单独移动 exe。
+如需卸载，运行 uninstall.bat 删除快捷方式，再删除本文件夹即可。
 "@ | Set-Content -Encoding utf8 -Path (Join-Path $dist "使用说明.txt")
+
+# ---------- 5b. 一键安装 / 卸载脚本 ----------
+Write-Host "==> [5/5] copy install.bat / uninstall.bat"
+foreach ($f in @("install.bat", "uninstall.bat")) {
+    $src = Join-Path $root $f
+    if (Test-Path $src) { Copy-Item -LiteralPath $src -Destination $dist -Force }
+}
 
 Write-Host ""
 Write-Host "构建完成: $dist"

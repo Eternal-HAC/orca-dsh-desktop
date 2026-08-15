@@ -37,9 +37,11 @@
 ## 🚀 使用
 
 1. 下载并解压 zip（整个文件夹一起解压，不要只拖 exe 出来）
-2. 双击 `DeepSeekHarness.exe`
+2. **一键安装**：双击 `install.bat`，自动在桌面与开始菜单创建 `DeepSeek Harness` 快捷方式（无需管理员权限）
+   - 或直接双击 `DeepSeekHarness.exe` 立即运行（便携模式）
 3. 首次打开在界面中配置你的 **DeepSeek API Key**
 4. 关闭窗口即停止服务
+5. 如需卸载：运行 `uninstall.bat` 删除快捷方式，再删除整个文件夹即可
 
 **系统要求**：Windows 10/11 x64（内置 .NET Framework 4.8 与 WebView2 运行时）
 
