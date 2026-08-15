@@ -134,26 +134,36 @@ Write-Host "==> [6/6] NSIS installer (Setup.exe)"
 $nsisDir = Join-Path $root "dist\_nsis"
 $nsisExe = Join-Path $nsisDir "makensis.exe"
 if (-not (Test-Path $nsisExe)) {
-    $nsis = Get-Command makensis -ErrorAction SilentlyContinue
-    if ($nsis) {
-        $nsisExe = $nsis.Source
-        Write-Host "    使用 PATH 中的 makensis: $nsisExe"
+    # 优先从 PATH / 常见安装目录定位 makensis（覆盖 choco、官方安装器、用户自定义等场景）
+    $candidates = @()
+    $p = Get-Command makensis -ErrorAction SilentlyContinue
+    if ($p) { $candidates += $p.Source }
+    $candidates += @(
+        (Join-Path $env:ProgramFiles "NSIS\makensis.exe"),
+        (Join-Path ${env:ProgramFiles(x86)} "NSIS\makensis.exe"),
+        "C:\Program Files\NSIS\makensis.exe",
+        "C:\Program Files (x86)\NSIS\makensis.exe"
+    )
+    $found = $candidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    if ($found) {
+        $nsisExe = $found
+        Write-Host "    找到 makensis: $nsisExe"
     } else {
         Write-Host "    未检测到 makensis，下载 NSIS 便携版 ..."
         $nsisVer = "3.11"
         $nsisZip = Join-Path $env:TEMP "nsis-$nsisVer.zip"
         $urls = @(
-            "https://sourceforge.net/projects/nsis/files/NSIS%203/$nsisVer/nsis-$nsisVer.zip/download",
-            "https://github.com/negrutiu/nsis/releases/download/v0.0.1/nsis-$nsisVer.zip"
+            "https://downloads.sourceforge.net/project/nsis/NSIS%203/$nsisVer/nsis-$nsisVer.zip",
+            "https://sourceforge.net/projects/nsis/files/NSIS%203/$nsisVer/nsis-$nsisVer.zip/download"
         )
         $ok = $false
         foreach ($u in $urls) {
             try {
-                Invoke-WebRequest -Uri $u -OutFile $nsisZip -TimeoutSec 120 -ErrorAction Stop
+                Invoke-WebRequest -Uri $u -OutFile $nsisZip -TimeoutSec 180 -ErrorAction Stop
                 if ((Get-Item $nsisZip).Length -gt 100KB) { $ok = $true; break }
             } catch { Write-Host "    下载失败: $u" }
         }
-        if (-not $ok) { throw "NSIS 下载失败，请手动安装 NSIS 后重试（https://nsis.sourceforge.io/）。" }
+        if (-not $ok) { throw "NSIS 下载失败，请手动安装 NSIS 后重试（https://nsis.sourceforge.io/Download）。" }
         Expand-Archive -LiteralPath $nsisZip -DestinationPath $nsisDir -Force
         # NSIS 压缩包顶层文件夹为 nsis-3.11/
         $extracted = Join-Path $nsisDir "nsis-$nsisVer"

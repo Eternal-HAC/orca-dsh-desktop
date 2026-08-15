@@ -33,7 +33,10 @@ jobs:
       - name: Install NSIS
         # CI 环境预装 makensis，供 build.ps1 第 6 步编译 Setup.exe 使用。
         shell: pwsh
-        run: choco install nsis --no-progress -y
+        run: |
+          choco install nsis --no-progress -y
+          # choco 不会把 NSIS 加入 PATH，这里显式加入，供 build.ps1 通过 Get-Command makensis 找到
+          echo "C:\Program Files (x86)\NSIS" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
       - name: Resolve version
         id: ver
