@@ -65,8 +65,23 @@ allowBuilds:
 "@ | Set-Content -Encoding utf8 -Path (Join-Path $buildDir "pnpm-workspace.yaml")
 
 if (-not (Test-Path (Join-Path $buildDir "node_modules\@deepseek-ai\dsh\lib\bin.js"))) {
+    # 未检测到 pnpm 时自动安装，省去开发者手动准备的步骤。
     $pnpm = Get-Command pnpm -ErrorAction SilentlyContinue
-    if (-not $pnpm) { throw "未找到 pnpm。请先安装 pnpm（npm i -g pnpm 或 corepack enable）。" }
+    if (-not $pnpm) {
+        if (Get-Command corepack -ErrorAction SilentlyContinue) {
+            Write-Host "    未检测到 pnpm，尝试 corepack enable ..."
+            & corepack enable 2>$null
+            & corepack prepare pnpm@latest --activate 2>$null
+            $pnpm = Get-Command pnpm -ErrorAction SilentlyContinue
+        }
+        if (-not $pnpm -and (Get-Command npm -ErrorAction SilentlyContinue)) {
+            Write-Host "    尝试 npm i -g pnpm ..."
+            & npm i -g pnpm 2>$null
+            $pnpm = Get-Command pnpm -ErrorAction SilentlyContinue
+        }
+    }
+    if (-not $pnpm) { throw "未找到 pnpm，且自动安装失败。请先安装 pnpm（npm i -g pnpm 或 corepack enable）。" }
+    Write-Host "    使用 pnpm: $($pnpm.Source)"
     Push-Location $buildDir
     try { & $pnpm.Source install --no-frozen-lockfile }
     finally { Pop-Location }

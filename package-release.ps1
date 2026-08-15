@@ -5,7 +5,11 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $dist = Join-Path $root "dist"
 $appDir = Join-Path $dist "DeepSeekHarness"
-if (-not (Test-Path (Join-Path $appDir "DeepSeekHarness.exe"))) { throw "请先运行 build.ps1" }
+if (-not (Test-Path (Join-Path $appDir "DeepSeekHarness.exe"))) {
+    Write-Host "未找到构建产物，自动运行 build.ps1 ..."
+    & "$root\build.ps1"
+    if ($LASTEXITCODE -ne 0) { throw "build.ps1 失败" }
+}
 $zip = Join-Path $dist "DeepSeekHarness-Desktop-v$Version-win-x64.zip"
 if (Test-Path $zip) { Remove-Item -LiteralPath $zip -Force }
 Write-Host "打包中（约需 10-15 分钟，请勿关闭）..."

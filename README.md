@@ -26,6 +26,7 @@
 - ✅ **打开即用**：双击启动 → 自动拉起本地 dsh 服务 → 窗口加载界面（实测约 4 秒就绪）
 - ✅ **关窗即停**：关闭窗口自动停止服务，不残留后台进程（也会接管并清理异常残留）
 - ✅ **零配置**：Windows 10/11 自带 .NET Framework 与 WebView2 运行时，无需额外安装
+- ✅ **自动修复依赖**：检测到 WebView2 运行时缺失时会弹窗引导一键下载并静默安装；node / dsh 文件被杀软误删或被占用端口时给出明确中文提示，不再黑话报错
 
 ## 📥 下载
 
@@ -45,14 +46,17 @@
 ## 🛠 从源码构建
 
 ```powershell
-# 需要：Windows + PowerShell + Node.js + pnpm（联网）
+# 需要：Windows + PowerShell + Node.js（联网；pnpm 缺失时脚本会自动安装）
 ./build.ps1            # 产物在 dist\DeepSeekHarness\
-./package-release.ps1  # 压缩包在 dist\DeepSeekHarness-Desktop-vX.Y.Z-win-x64.zip
+./package-release.ps1  # 若 dist 不存在会自动先 build；压缩包在 dist\DeepSeekHarness-Desktop-vX.Y.Z-win-x64.zip
 ```
 
-构建脚本会自动：获取 Node.js → 用 pnpm 安装 `@deepseek-ai/dsh`（扁平布局，无符号链接）→ 下载 WebView2 程序集 → 用系统 csc 编译 exe。
+构建脚本会自动：获取 Node.js → 用 pnpm 安装 `@deepseek-ai/dsh`（扁平布局，无符号链接；pnpm 缺失时自动 `corepack` / `npm i -g pnpm`）→ 下载 WebView2 程序集 → 用系统 csc 编译 exe。
 
-也可以直接用 GitHub Actions：推 `v*` tag 后自动构建并上传到 Release（见 `.github/workflows/release.yml`）。
+也可以直接用 GitHub Actions 一键发布（无需本机环境）：
+
+- **推 `v*` tag**：自动构建并上传到 Release（见 `.github/workflows/release.yml`）。
+- **手动触发**：在 Actions 页面选 `Build and Release` → `Run workflow`，填入版本号（如 `1.0.0`）即可，无需打 tag。
 
 ## 📁 目录结构
 
@@ -78,7 +82,7 @@ dist/               构建产物（不入库）
 可以，整个 `DeepSeekHarness` 文件夹一起拷贝即可（保持 exe 与 node.exe/node_modules 同目录）。
 
 **Q：WebView2 是什么？**
-Windows 10/11 自带的 Edge 内核运行时；若系统精简版缺失，应用会提示，从 [微软官网](https://developer.microsoft.com/microsoft-edge/webview2/) 安装一次即可。
+Windows 10/11 自带的 Edge 内核运行时；若系统精简版缺失，应用启动时会**自动弹出引导，一键下载并静默安装**，无需手动操作。也可从 [微软官网](https://developer.microsoft.com/microsoft-edge/webview2/) 手动安装。
 
 ## ⚠️ 免责声明
 

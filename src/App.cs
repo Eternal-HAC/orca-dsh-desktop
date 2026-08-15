@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -119,7 +120,6 @@ namespace DeepSeekHarness
             try
             {
                 await StartServerIfNeededAsync();
-
                 if (shuttingDown) return;
                 await InitializeWebViewAsync();
             }
@@ -139,6 +139,20 @@ namespace DeepSeekHarness
         // WebView2 初始化（带重试：偶发 E_ABORT，多为上一次实例未完全退出导致，稍候重试即可）
         private async Task InitializeWebViewAsync()
         {
+            // 运行前先确认 WebView2 运行时已安装；缺失则引导用户一键安装后再继续。
+            if (!IsWebView2RuntimeAvailable())
+            {
+                if (!await EnsureWebView2RuntimeAsync())
+                {
+                    if (!shuttingDown && !IsDisposed)
+                        MessageBox.Show(
+                            "未检测到 WebView2 运行时，应用无法启动。\n请先从 https://aka.ms/webview2 安装后重试。",
+                            "DeepSeek Harness", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    BeginInvoke(new Action(Close));
+                    return;
+                }
+            }
+
             Exception last = null;
             for (int attempt = 1; attempt <= 3; attempt++)
             {
@@ -148,6 +162,59 @@ namespace DeepSeekHarness
                 if (attempt < 3) await Task.Delay(2000 * attempt);
             }
             throw last;
+        }
+
+        // 探测系统是否安装了 WebView2 运行时（Evergreen）。
+        // 已安装返回 true；缺失或任何异常均视为不可用，交由引导安装流程处理。
+        private static bool IsWebView2RuntimeAvailable()
+        {
+            try
+            {
+                string v = CoreWebView2Environment.GetAvailableBrowserVersionString(null);
+                return !string.IsNullOrEmpty(v);
+            }
+            catch { return false; }
+        }
+
+        // 引导用户下载并静默安装 WebView2 Evergreen 运行时。成功返回 true。
+        private async Task<bool> EnsureWebView2RuntimeAsync()
+        {
+            DialogResult r = MessageBox.Show(
+                "未检测到 Microsoft WebView2 运行时，本应用需要它才能运行。\n\n是否立即下载并安装？（约 1-2 分钟，需联网；可能需要管理员权限）",
+                "DeepSeek Harness", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (r != DialogResult.Yes) return false;
+
+            string setup = Path.Combine(Path.GetTempPath(), "MicrosoftEdgeWebView2Setup.exe");
+            try
+            {
+                if (!File.Exists(setup))
+                {
+                    using (var wc = new WebClient())
+                    {
+                        await Task.Run(() => wc.DownloadFile(
+                            "https://go.microsoft.com/fwlink/p/?LinkId=2086042", setup));
+                    }
+                }
+
+                ProcessStartInfo psi = new ProcessStartInfo(setup, "/silent /install")
+                {
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+                using (Process p = Process.Start(psi))
+                {
+                    if (p != null) p.WaitForExit();
+                }
+
+                return IsWebView2RuntimeAvailable();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("WebView2 运行时安装失败：" + ex.Message +
+                    "\n\n请手动从 https://developer.microsoft.com/microsoft-edge/webview2/ 安装后重试。",
+                    "DeepSeek Harness", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
         }
 
         // 成功返回 null；失败返回异常并清理控件
@@ -201,13 +268,17 @@ namespace DeepSeekHarness
             if (IsPortOpen(Port))
             {
                 AdoptExistingServer();
+                // 端口开了但没找到本应用自己的 dsh 进程：说明被别的程序占用，
+                // 不应静默接管/显示他人内容，直接提示用户。
+                if (serverProc == null)
+                    throw new Exception("端口 " + Port + " 已被其他程序占用，无法启动本地服务。\n请关闭占用该端口的程序后重试。");
                 return;
             }
 
             if (!File.Exists(nodePath))
-                throw new FileNotFoundException("未找到运行时：node.exe 不存在于程序目录。", nodePath);
+                throw new Exception("程序目录缺少 node.exe，请下载完整的发布包（整个文件夹）后重试。\n详见 GitHub Releases 页面。");
             if (!File.Exists(dshPath))
-                throw new FileNotFoundException("未找到 dsh 入口：node_modules/@deepseek-ai/dsh 不存在。", dshPath);
+                throw new Exception("程序目录缺少 dsh 依赖（node_modules/@deepseek-ai/dsh），请下载完整的发布包后重试。\n详见 GitHub Releases 页面。");
 
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = nodePath;
