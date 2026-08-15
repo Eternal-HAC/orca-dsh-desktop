@@ -14,13 +14,64 @@ namespace DeepSeekHarness
 {
     internal static class Program
     {
+        private static Mutex singleInstance;
+        private const string MutexName = "DeepSeekHarness.Desktop.SingleInstance";
+
         [STAThread]
         private static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+
+            // 单实例：避免多个 exe 同时拉起/接管同一服务，导致互相误杀。
+            // 用 initiallyOwned=false + WaitOne(0) 的方式，避免上一个实例崩溃留下的
+            // abandoned mutex 让构造抛出 AbandonedMutexException。
+            singleInstance = new Mutex(false, MutexName);
+            bool owned;
+            try { owned = singleInstance.WaitOne(0, false); }
+            catch (AbandonedMutexException) { owned = true; }
+
+            if (!owned)
+            {
+                BringExistingToFront();
+                return;
+            }
+
+            try
+            {
+                Application.Run(new MainForm());
+            }
+            finally
+            {
+                try { singleInstance.ReleaseMutex(); } catch { }
+                singleInstance.Dispose();
+            }
         }
+
+        private static void BringExistingToFront()
+        {
+            try
+            {
+                IntPtr h = FindWindow(null, "DeepSeek Harness");
+                if (h != IntPtr.Zero)
+                {
+                    ShowWindow(h, 9); // SW_RESTORE
+                    SetForegroundWindow(h);
+                }
+            }
+            catch { }
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
     }
 
     internal sealed class MainForm : Form
@@ -31,8 +82,11 @@ namespace DeepSeekHarness
         private readonly string dshPath;
         private readonly StringBuilder errorTail = new StringBuilder();
         private WebView2 webView;
+        private Label statusLabel;
         private Process serverProc;
+        private bool ownsServer;
         private bool shuttingDown;
+        private bool navWarned;
 
         public MainForm()
         {
@@ -45,6 +99,18 @@ namespace DeepSeekHarness
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Color.White;
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
+
+            // 启动期占位提示，避免白屏 + 让 UI 在等待服务时仍响应。
+            statusLabel = new Label
+            {
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Text = "正在启动 DeepSeek Harness 本地服务…",
+                Font = new Font("Microsoft YaHei", 12),
+                ForeColor = Color.FromArgb(90, 90, 90)
+            };
+            Controls.Add(statusLabel);
+
             Shown += async delegate { await InitializeAsync(); };
         }
 
@@ -52,16 +118,20 @@ namespace DeepSeekHarness
         {
             try
             {
-                StartServerIfNeeded();
+                await StartServerIfNeededAsync();
 
+                if (shuttingDown) return;
                 await InitializeWebViewAsync();
             }
             catch (Exception ex)
             {
                 string detail = ex.ToString() + "\r\n\r\n" + ErrorTailText();
                 try { File.WriteAllText(Path.Combine(baseDir, "dsh-app-error.log"), detail); } catch { }
-                MessageBox.Show("DeepSeek Harness 启动失败：\r\n\r\n" + ex.Message + ErrorTailText(),
-                    "DeepSeek Harness", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!shuttingDown && !IsDisposed)
+                {
+                    MessageBox.Show("DeepSeek Harness 启动失败：\r\n\r\n" + ex.Message + ErrorTailText(),
+                        "DeepSeek Harness", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
                 BeginInvoke(new Action(Close));
             }
         }
@@ -75,11 +145,7 @@ namespace DeepSeekHarness
                 Exception ex = await TryCreateWebViewAsync();
                 if (ex == null) return;
                 last = ex;
-                if (attempt < 3)
-                {
-                    await Task.Delay(2000 * attempt);
-                    Application.DoEvents();
-                }
+                if (attempt < 3) await Task.Delay(2000 * attempt);
             }
             throw last;
         }
@@ -102,7 +168,11 @@ namespace DeepSeekHarness
                 view.CoreWebView2.Settings.AreDevToolsEnabled = false;
                 view.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
                 view.CoreWebView2.Settings.IsStatusBarEnabled = false;
+                view.CoreWebView2.NavigationCompleted += OnNavigationCompleted;
                 view.Source = new Uri("http://127.0.0.1:" + Port);
+
+                // WebView 就绪，移除占位提示
+                if (statusLabel != null) { Controls.Remove(statusLabel); statusLabel.Dispose(); statusLabel = null; }
                 webView = view;
                 return null;
             }
@@ -114,7 +184,19 @@ namespace DeepSeekHarness
             }
         }
 
-        private void StartServerIfNeeded()
+        private void OnNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            if (!e.IsSuccess && !shuttingDown && !navWarned)
+            {
+                navWarned = true;
+                BeginInvoke(new Action(() =>
+                    MessageBox.Show("无法加载 DeepSeek Harness 界面，请检查本地服务是否正常运行。",
+                        "DeepSeek Harness", MessageBoxButtons.OK, MessageBoxIcon.Warning)));
+            }
+        }
+
+        // 异步等待服务就绪，避免阻塞 UI 线程（旧实现用 Thread.Sleep 导致白屏卡死）。
+        private async Task StartServerIfNeededAsync()
         {
             if (IsPortOpen(Port))
             {
@@ -122,8 +204,10 @@ namespace DeepSeekHarness
                 return;
             }
 
-            if (!File.Exists(nodePath)) throw new FileNotFoundException("未找到运行时：node.exe 不存在于程序目录。", nodePath);
-            if (!File.Exists(dshPath)) throw new FileNotFoundException("未找到 dsh 入口：node_modules/@deepseek-ai/dsh 不存在。", dshPath);
+            if (!File.Exists(nodePath))
+                throw new FileNotFoundException("未找到运行时：node.exe 不存在于程序目录。", nodePath);
+            if (!File.Exists(dshPath))
+                throw new FileNotFoundException("未找到 dsh 入口：node_modules/@deepseek-ai/dsh 不存在。", dshPath);
 
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = nodePath;
@@ -136,16 +220,17 @@ namespace DeepSeekHarness
 
             serverProc = Process.Start(psi);
             if (serverProc == null) throw new Exception("无法启动 dsh 服务进程。");
+            ownsServer = true;
 
             serverProc.OutputDataReceived += delegate { };
-            serverProc.ErrorDataReceived += delegate (object s, DataReceivedEventArgs e)
+            serverProc.ErrorDataReceived += delegate (object s, DataReceivedEventArgs ev)
             {
-                if (e.Data != null)
+                if (ev.Data != null)
                 {
                     lock (errorTail)
                     {
                         if (errorTail.Length > 8000) errorTail.Remove(0, 4000);
-                        errorTail.AppendLine(e.Data);
+                        errorTail.AppendLine(ev.Data);
                     }
                 }
             };
@@ -153,24 +238,31 @@ namespace DeepSeekHarness
             serverProc.BeginErrorReadLine();
 
             DateTime deadline = DateTime.UtcNow.AddSeconds(90);
+            int waited = 0;
             while (DateTime.UtcNow < deadline)
             {
                 if (serverProc.HasExited)
                     throw new Exception("dsh 服务进程已退出。" + ErrorTailText());
                 if (IsPortOpen(Port)) return;
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
+                waited++;
+                if (statusLabel != null && !statusLabel.IsDisposed)
+                {
+                    BeginInvoke(new Action(() =>
+                        statusLabel.Text = "正在启动 DeepSeek Harness 本地服务…（已等待 " + waited + " 秒）"));
+                }
             }
             throw new Exception("等待 dsh 服务就绪超时（90 秒）。" + ErrorTailText());
         }
 
         // 若端口已被本目录安装的 dsh 服务占用（例如上次异常残留），接管该进程，
         // 使关闭窗口时也能一并停止，避免遗留后台服务。
+        // 由于已做单实例互斥，这里接管到的只会是"上一次崩溃残留"的进程，可安全清理。
         private void AdoptExistingServer()
         {
             try
             {
-                string marker = Path.Combine(baseDir, "node_modules", "@deepseek-ai", "dsh", "lib", "bin.js")
-                    .Replace('/', '\\').ToLowerInvariant();
+                string marker = dshPath.Replace('/', '\\').ToLowerInvariant();
                 using (System.Management.ManagementObjectSearcher searcher =
                     new System.Management.ManagementObjectSearcher(
                         "SELECT ProcessId, CommandLine FROM Win32_Process WHERE Name = 'node.exe'"))
@@ -182,7 +274,8 @@ namespace DeepSeekHarness
                         if (cmd.ToLowerInvariant().IndexOf(marker, StringComparison.Ordinal) >= 0)
                         {
                             int pid = Convert.ToInt32(o["ProcessId"]);
-                            try { serverProc = Process.GetProcessById(pid); break; } catch { }
+                            try { serverProc = Process.GetProcessById(pid); ownsServer = true; break; }
+                            catch { }
                         }
                     }
                 }
@@ -216,13 +309,17 @@ namespace DeepSeekHarness
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if (!shuttingDown && serverProc != null)
+            if (!shuttingDown)
             {
                 shuttingDown = true;
                 try
                 {
-                    if (!serverProc.HasExited) serverProc.Kill();
-                    serverProc.WaitForExit(3000);
+                    if (serverProc != null && !serverProc.HasExited)
+                    {
+                        if (ownsServer) KillProcessTree(serverProc.Id); // 连带子进程一起清理
+                        else serverProc.Kill();                         // 端口上是别人：仅尽力终止
+                        serverProc.WaitForExit(3000);
+                    }
                 }
                 catch { }
                 try { serverProc.Dispose(); } catch { }
@@ -230,10 +327,30 @@ namespace DeepSeekHarness
             }
             base.OnFormClosing(e);
         }
+
+        // 递归杀掉整棵进程树（WMI 查子进程），确保关窗即停、无残留。
+        private void KillProcessTree(int pid)
+        {
+            try
+            {
+                using (var searcher = new System.Management.ManagementObjectSearcher(
+                    "SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = " + pid))
+                {
+                    foreach (System.Management.ManagementObject o in searcher.Get())
+                    {
+                        try { KillProcessTree(Convert.ToInt32(o["ProcessId"])); } catch { }
+                    }
+                }
+            }
+            catch { }
+            try
+            {
+                using (var p = Process.GetProcessById(pid))
+                {
+                    if (!p.HasExited) p.Kill();
+                }
+            }
+            catch { }
+        }
     }
 }
-
-
-
-
-
