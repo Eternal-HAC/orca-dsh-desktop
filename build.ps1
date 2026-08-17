@@ -10,25 +10,25 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $dist = Join-Path $root "dist\DeepSeekHarness"
 $lib  = Join-Path $root "dist\_wv2"
 $buildDir = Join-Path $root "dist\_dsh-build"
+$bundledNodeVersion = "v24.14.0"
 New-Item -ItemType Directory -Force -Path $dist, $lib, $buildDir | Out-Null
 
 # ---------- 1. node.exe ----------
-Write-Host "==> [1/6] node.exe"
-$nodeCmd = Get-Command node -ErrorAction SilentlyContinue
-if ($nodeCmd) {
-    Copy-Item -LiteralPath $nodeCmd.Source -Destination (Join-Path $dist "node.exe") -Force
-    Write-Host "    copied from PATH: $($nodeCmd.Source)"
-} else {
-    $nodeVer = "v24.14.0"
-    $tmpZip = Join-Path $env:TEMP "node-$nodeVer-win-x64.zip"
-    $tmpDir = Join-Path $env:TEMP "node-$nodeVer-win-x64"
-    if (-not (Test-Path (Join-Path $tmpDir "node.exe"))) {
-        Write-Host "    downloading Node.js $nodeVer ..."
-        Invoke-WebRequest -Uri "https://nodejs.org/dist/$nodeVer/node-$nodeVer-win-x64.zip" -OutFile $tmpZip
-        Expand-Archive -LiteralPath $tmpZip -DestinationPath $tmpDir -Force
-    }
-    Copy-Item -LiteralPath (Join-Path $tmpDir "node.exe") -Destination (Join-Path $dist "node.exe") -Force
+Write-Host "==> [1/6] bundled Node.js $bundledNodeVersion"
+$nodeZip = Join-Path $env:TEMP "node-$bundledNodeVersion-win-x64.zip"
+$nodeExtractDir = Join-Path $env:TEMP "node-$bundledNodeVersion-win-x64"
+$bundledNodeSource = Join-Path $nodeExtractDir "node-$bundledNodeVersion-win-x64\node.exe"
+if (-not (Test-Path $bundledNodeSource)) {
+    Write-Host "    downloading Node.js $bundledNodeVersion ..."
+    Invoke-WebRequest -Uri "https://nodejs.org/dist/$bundledNodeVersion/node-$bundledNodeVersion-win-x64.zip" -OutFile $nodeZip
+    Expand-Archive -LiteralPath $nodeZip -DestinationPath $nodeExtractDir -Force
 }
+if (-not (Test-Path $bundledNodeSource)) { throw "固定 Node.js runtime 缺失：$bundledNodeSource" }
+$actualBundledNodeVersion = (& $bundledNodeSource --version).Trim()
+if ($actualBundledNodeVersion -ne $bundledNodeVersion) {
+    throw "固定 Node.js runtime 版本不匹配：预期 $bundledNodeVersion，实际 $actualBundledNodeVersion"
+}
+Copy-Item -LiteralPath $bundledNodeSource -Destination (Join-Path $dist "node.exe") -Force
 
 # ---------- 2. WebView2 程序集 ----------
 Write-Host "==> [2/6] WebView2 assemblies"
