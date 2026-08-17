@@ -3,7 +3,7 @@
 ;   /DVERSION=<版本号, 如 0.2.0>
 ;   /DAPP_SOURCE=<dist\DeepSeekHarness 的绝对路径>
 ;   /DOUT=<输出 exe 的绝对路径>
-; 安装到 $LOCALAPPDATA\DeepSeekHarness（按用户安装，无需管理员权限 / 无 UAC 弹窗）。
+; 安装到 $LOCALAPPDATA\Programs\OrcaDSH（按用户安装，无需管理员权限 / 无 UAC 弹窗）。
 
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
@@ -24,7 +24,7 @@
 
 Name "${APP_NAME}"
 OutFile "${OUT}"
-InstallDir "$LOCALAPPDATA\DeepSeekHarness"
+InstallDir "$LOCALAPPDATA\Programs\OrcaDSH"
 RequestExecutionLevel user
 Unicode True
 SetCompressor /SOLID lzma

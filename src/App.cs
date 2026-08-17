@@ -81,6 +81,8 @@ namespace DeepSeekHarness
         private readonly string baseDir;
         private readonly string nodePath;
         private readonly string dshPath;
+        private readonly string dshHome;
+        private readonly string profileSeedPath;
         private readonly StringBuilder errorTail = new StringBuilder();
         private WebView2 webView;
         private Label statusLabel;
@@ -100,6 +102,8 @@ namespace DeepSeekHarness
             baseDir = AppDomain.CurrentDomain.BaseDirectory;
             nodePath = Path.Combine(baseDir, "node.exe");
             dshPath = Path.Combine(baseDir, "node_modules", "@deepseek-ai", "dsh", "lib", "bin.js");
+            dshHome = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OrcaDSH");
+            profileSeedPath = Path.Combine(baseDir, "profile-seed");
 
             Text = "DeepSeek Harness";
             ClientSize = new Size(1280, 820);
@@ -134,7 +138,13 @@ namespace DeepSeekHarness
             catch (Exception ex)
             {
                 string detail = ex.ToString() + "\r\n\r\n" + ErrorTailText();
-                try { File.WriteAllText(Path.Combine(baseDir, "dsh-app-error.log"), detail); } catch { }
+                try
+                {
+                    string logDir = Path.Combine(dshHome, "logs");
+                    Directory.CreateDirectory(logDir);
+                    File.WriteAllText(Path.Combine(logDir, "dsh-app-error.log"), detail);
+                }
+                catch { }
                 if (!shuttingDown && !IsDisposed)
                 {
                     MessageBox.Show("DeepSeek Harness 启动失败：\r\n\r\n" + ex.Message + ErrorTailText(),
@@ -234,9 +244,7 @@ namespace DeepSeekHarness
                 view = new WebView2 { Dock = DockStyle.Fill };
                 Controls.Add(view);
 
-                string userData = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "DeepSeekHarness", "EBWebView");
+                string userData = Path.Combine(dshHome, "WebView2");
                 CoreWebView2Environment env = await CoreWebView2Environment.CreateAsync(null, userData, null);
                 await view.EnsureCoreWebView2Async(env);
 
@@ -273,6 +281,8 @@ namespace DeepSeekHarness
         // 异步等待服务就绪，避免阻塞 UI 线程（旧实现用 Thread.Sleep 导致白屏卡死）。
         private async Task StartServerIfNeededAsync()
         {
+            EnsureDshHomeInitialized();
+
             if (IsPortOpen(Port))
             {
                 AdoptExistingServer();
@@ -296,6 +306,7 @@ namespace DeepSeekHarness
             psi.CreateNoWindow = true;
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
+            psi.EnvironmentVariables["DSH_HOME"] = dshHome;
 
             serverProc = Process.Start(psi);
             if (serverProc == null) throw new Exception("无法启动 dsh 服务进程。");
@@ -332,6 +343,30 @@ namespace DeepSeekHarness
                 }
             }
             throw new Exception("等待 dsh 服务就绪超时（90 秒）。" + ErrorTailText());
+        }
+
+        // 只在目标 profile 尚不存在时写入随安装包提供的干净 seed；
+        // 用户已有的凭据、会话和配置从不由应用覆盖或删除。
+        private void EnsureDshHomeInitialized()
+        {
+            Directory.CreateDirectory(dshHome);
+            string targetProfile = Path.Combine(dshHome, "profiles", "web");
+            if (Directory.Exists(targetProfile) || !Directory.Exists(profileSeedPath)) return;
+            CopyDirectoryWithoutOverwrite(profileSeedPath, dshHome);
+        }
+
+        private static void CopyDirectoryWithoutOverwrite(string source, string destination)
+        {
+            Directory.CreateDirectory(destination);
+            foreach (string file in Directory.GetFiles(source))
+            {
+                string destinationFile = Path.Combine(destination, Path.GetFileName(file));
+                if (!File.Exists(destinationFile)) File.Copy(file, destinationFile);
+            }
+            foreach (string directory in Directory.GetDirectories(source))
+            {
+                CopyDirectoryWithoutOverwrite(directory, Path.Combine(destination, Path.GetFileName(directory)));
+            }
         }
 
         // 若端口已被本目录安装的 dsh 服务占用（例如上次异常残留），接管该进程，
