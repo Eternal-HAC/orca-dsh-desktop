@@ -1,4 +1,4 @@
-; installer.nsi - DeepSeek Harness Desktop 安装包
+﻿; installer.nsi - DeepSeek Harness Desktop 安装包
 ; 由 build.ps1 调用 makensis 编译，需传入:
 ;   /DVERSION=<版本号, 如 0.2.0>
 ;   /DAPP_SOURCE=<dist\DeepSeekHarness 的绝对路径>

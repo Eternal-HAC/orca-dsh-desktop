@@ -154,13 +154,16 @@ if (-not (Test-Path $nsisExe)) {
         $nsisZip = Join-Path $env:TEMP "nsis-$nsisVer.zip"
         $urls = @(
             "https://downloads.sourceforge.net/project/nsis/NSIS%203/$nsisVer/nsis-$nsisVer.zip",
-            "https://sourceforge.net/projects/nsis/files/NSIS%203/$nsisVer/nsis-$nsisVer.zip/download"
+            "https://sourceforge.net/projects/nsis/files/NSIS%203/$nsisVer/nsis-$nsisVer.zip/download",
+            "https://mirrors.mit.edu/macports/distfiles/nsis/nsis-$nsisVer.zip"
         )
         $ok = $false
         foreach ($u in $urls) {
             try {
                 Invoke-WebRequest -Uri $u -OutFile $nsisZip -TimeoutSec 180 -ErrorAction Stop
-                if ((Get-Item $nsisZip).Length -gt 100KB) { $ok = $true; break }
+                $header = [System.IO.File]::ReadAllBytes($nsisZip)[0..1]
+                if ((Get-Item $nsisZip).Length -gt 100KB -and $header[0] -eq 0x50 -and $header[1] -eq 0x4B) { $ok = $true; break }
+                Remove-Item -LiteralPath $nsisZip -Force -ErrorAction SilentlyContinue
             } catch { Write-Host "    下载失败: $u" }
         }
         if (-not $ok) { throw "NSIS 下载失败，请手动安装 NSIS 后重试（https://nsis.sourceforge.io/Download）。" }
