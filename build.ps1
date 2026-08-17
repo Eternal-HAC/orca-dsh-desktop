@@ -11,6 +11,9 @@ $dist = Join-Path $root "dist\DeepSeekHarness"
 $lib  = Join-Path $root "dist\_wv2"
 $buildDir = Join-Path $root "dist\_dsh-build"
 $bundledNodeVersion = "v24.14.0"
+$skinPackageId = "dsh-client-liang-intensity-skin"
+$skinVersion = "0.1.4"
+$skinUrl = "https://github.com/kingOfSoySauce/dsh-liang-skin/releases/download/v$skinVersion/$skinPackageId-$skinVersion.tgz"
 New-Item -ItemType Directory -Force -Path $dist, $lib, $buildDir | Out-Null
 
 # ---------- 1. node.exe ----------
@@ -91,6 +94,55 @@ if (-not (Test-Path (Join-Path $buildDir "node_modules\@deepseek-ai\dsh\lib\bin.
 if (Test-Path (Join-Path $dist "node_modules")) { Remove-Item -LiteralPath (Join-Path $dist "node_modules") -Recurse -Force }
 Write-Host "    copying node_modules ..."
 Copy-Item -LiteralPath (Join-Path $buildDir "node_modules") -Destination (Join-Path $dist "node_modules") -Recurse -Force
+
+# ---------- 3b. 默认 liang skin profile seed ----------
+Write-Host "==> [3b] default liang skin $skinVersion profile seed"
+$skinTarball = Join-Path $buildDir "$skinPackageId-$skinVersion.tgz"
+$seedBuildHome = Join-Path $root "dist\_profile-seed-build"
+$profileSeed = Join-Path $dist "profile-seed"
+if (-not (Test-Path $skinTarball)) {
+    Write-Host "    downloading fixed release: $skinUrl"
+    Invoke-WebRequest -Uri $skinUrl -OutFile $skinTarball
+}
+if (Test-Path $seedBuildHome) { Remove-Item -LiteralPath $seedBuildHome -Recurse -Force }
+if (Test-Path $profileSeed) { Remove-Item -LiteralPath $profileSeed -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $seedBuildHome | Out-Null
+
+$previousDshHome = $env:DSH_HOME
+try {
+    $env:DSH_HOME = $seedBuildHome
+    # 使用固定公开 Release URL 安装，避免将构建机本地 tarball 路径写进 profile 元数据。
+    & (Join-Path $dist "node.exe") (Join-Path $dist "node_modules\@deepseek-ai\dsh\lib\bin.js") plugin --profile web add $skinUrl
+    if ($LASTEXITCODE -ne 0) { throw "dsh plugin add 失败" }
+}
+finally {
+    if ($null -eq $previousDshHome) { Remove-Item Env:DSH_HOME -ErrorAction SilentlyContinue }
+    else { $env:DSH_HOME = $previousDshHome }
+}
+
+$seedPackageJson = Join-Path $seedBuildHome "profiles\web\package.json"
+$seedSkinDir = Join-Path $seedBuildHome "profiles\web\node_modules\$skinPackageId"
+if (-not (Test-Path $seedPackageJson) -or -not (Test-Path $seedSkinDir)) {
+    throw "默认 skin profile seed 不完整"
+}
+$seedPackage = Get-Content -LiteralPath $seedPackageJson -Raw | ConvertFrom-Json
+if ($skinPackageId -notin @($seedPackage.dsh.profile.bundles)) {
+    throw "默认 skin 未写入 dsh.profile.bundles"
+}
+$unexpectedSeedFiles = Get-ChildItem -LiteralPath $seedBuildHome -Recurse -File | Where-Object {
+    $_.Name -eq ".credentials.yaml" -or $_.Name -like "*.log"
+}
+if ($unexpectedSeedFiles) {
+    throw "profile seed 包含不应发布的用户数据：$($unexpectedSeedFiles.FullName -join ', ')"
+}
+$seedMetadataFiles = Get-ChildItem -LiteralPath (Join-Path $seedBuildHome "profiles\web") -File |
+    Where-Object { $_.Name -in @("package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "cordis.patch.yml") }
+foreach ($metadataFile in $seedMetadataFiles) {
+    if (Select-String -LiteralPath $metadataFile.FullName -Pattern '(?i)\b[A-Z]:[\\/]' -Quiet) {
+        throw "profile seed 元数据包含构建机绝对路径：$($metadataFile.FullName)"
+    }
+}
+Copy-Item -LiteralPath $seedBuildHome -Destination $profileSeed -Recurse -Force
 
 # ---------- 4. 编译 exe ----------
 Write-Host "==> [4/6] compile DeepSeekHarness.exe"
