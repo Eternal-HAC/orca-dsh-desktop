@@ -1,18 +1,42 @@
-# ????
+# Build outputs and caches
 dist/
+*.tmp
+.DS_Store
 
-# ?????
+# Local logs
 *.log
+logs/
 
-# ???? build.ps1 ???????
+# Local runtime dependencies and downloaded executables
 node_modules/
 node.exe
 *.dll
-package.json
-pnpm-lock.yaml
-pnpm-workspace.yaml
-.npmrc
 
-# ??
-*.tmp
-.DS_Store
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+.credentials.yaml
+**/.credentials.yaml
+
+# User-owned DSH state: credentials, sessions, and runtime configuration
+.dsh/
+**/.dsh/
+DSH_HOME/
+dsh-home/
+user-data/
+sessions/
+
+# Ephemeral build/runtime profile state. Do not ignore profiles/ itself:
+# clean source templates and scripts under profiles/ remain version controlled.
+.runtime-seed/
+runtime-seed.generated/
+.local-profile/
+.tmp-profile/
+profiles/*/node_modules/
+profiles/*/.pnpm/
+profiles/*/sessions/
+profiles/*/logs/
+profiles/*/.credentials.yaml
+profiles/*/.env
+profiles/*/.env.*
