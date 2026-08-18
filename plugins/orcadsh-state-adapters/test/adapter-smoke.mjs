@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { reduceActivity } from '../src/activity.js'
+import { createDshActivityAdapter, reduceActivity } from '../src/activity.js'
 import { initialMetricsState, metricsSnapshot, reduceMetrics } from '../src/metrics.js'
 
 const sample = { type: 'assistant/chunk', time: 1_000, data: { turn: 1, step: 1, chunk: { type: 'reasoning-delta', index: 0, text: 'reasoning' } } }
@@ -29,5 +29,8 @@ activity = reduceActivity(activity, { type: 'tool/result', data: { message: { co
 assert.equal(activity, 'review')
 activity = reduceActivity('thinking', { type: 'turn/end', data: { reason: { kind: 'aborted', reason: { kind: 'user' } } } })
 assert.equal(activity, 'failed')
+const activityAdapter = createDshActivityAdapter()
+activityAdapter.consume({ type: 'turn/start', data: { turn: 1 } })
+assert.deepEqual(activityAdapter.snapshot(), { state: 'waiting' })
 
 console.log('adapter-smoke: PASS')

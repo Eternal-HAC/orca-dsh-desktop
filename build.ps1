@@ -14,6 +14,8 @@ $bundledNodeVersion = "v24.14.0"
 $skinPackageId = "dsh-client-liang-intensity-skin"
 $skinVersion = "0.1.4"
 $skinUrl = "https://github.com/kingOfSoySauce/dsh-liang-skin/releases/download/v$skinVersion/$skinPackageId-$skinVersion.tgz"
+$stateAdaptersPackageId = "orcadsh-state-adapters"
+$stateAdaptersSource = Join-Path $root "plugins\$stateAdaptersPackageId"
 New-Item -ItemType Directory -Force -Path $dist, $lib, $buildDir | Out-Null
 
 # ---------- 1. node.exe ----------
@@ -111,8 +113,13 @@ New-Item -ItemType Directory -Force -Path $seedBuildHome | Out-Null
 $previousDshHome = $env:DSH_HOME
 try {
     $env:DSH_HOME = $seedBuildHome
-    # 使用固定公开 Release URL 安装，避免将构建机本地 tarball 路径写进 profile 元数据。
+    # Prefer the public Release URL. A previously downloaded fixed tarball is
+    # an offline build fallback; its local path is scrubbed from metadata below.
     & (Join-Path $dist "node.exe") (Join-Path $dist "node_modules\@deepseek-ai\dsh\lib\bin.js") plugin --profile web add $skinUrl
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "    fixed skin URL unavailable; retrying with cached tarball"
+        & (Join-Path $dist "node.exe") (Join-Path $dist "node_modules\@deepseek-ai\dsh\lib\bin.js") plugin --profile web add $skinTarball
+    }
     if ($LASTEXITCODE -ne 0) { throw "dsh plugin add 失败" }
 }
 finally {
@@ -122,13 +129,33 @@ finally {
 
 $seedPackageJson = Join-Path $seedBuildHome "profiles\web\package.json"
 $seedSkinDir = Join-Path $seedBuildHome "profiles\web\node_modules\$skinPackageId"
-if (-not (Test-Path $seedPackageJson) -or -not (Test-Path $seedSkinDir)) {
-    throw "默认 skin profile seed 不完整"
+if (-not (Test-Path $seedPackageJson) -or -not (Test-Path $seedSkinDir) -or -not (Test-Path $stateAdaptersSource)) {
+  throw "默认 skin profile seed 不完整"
 }
 $seedPackage = Get-Content -LiteralPath $seedPackageJson -Raw | ConvertFrom-Json
+$seedPackage.dependencies.PSObject.Properties[$skinPackageId].Value = $skinUrl
 if ($skinPackageId -notin @($seedPackage.dsh.profile.bundles)) {
-    throw "默认 skin 未写入 dsh.profile.bundles"
+  throw "默认 skin 未写入 dsh.profile.bundles"
 }
+$seedStateAdaptersDir = Join-Path $seedBuildHome "profiles\web\node_modules\$stateAdaptersPackageId"
+New-Item -ItemType Directory -Force -Path $seedStateAdaptersDir | Out-Null
+foreach ($runtimeItem in @("package.json", "cordis.patch.yml", "src")) {
+    Copy-Item -LiteralPath (Join-Path $stateAdaptersSource $runtimeItem) -Destination $seedStateAdaptersDir -Recurse -Force
+}
+if (-not (Test-Path (Join-Path $seedStateAdaptersDir "cordis.patch.yml"))) {
+    throw "state adapters bundle patch 缺失"
+}
+if ($stateAdaptersPackageId -notin @($seedPackage.dsh.profile.bundles)) {
+    $seedPackage.dsh.profile.bundles += $stateAdaptersPackageId
+}
+$seedPackage | ConvertTo-Json -Depth 12 | Set-Content -Encoding utf8 -Path $seedPackageJson
+# The profile loader consumes package.json, bundle patches, and staged modules;
+# lock/workspace files are pnpm build metadata and can retain local paths.
+Remove-Item -LiteralPath (Join-Path $seedBuildHome "profiles\web\pnpm-lock.yaml"), (Join-Path $seedBuildHome "profiles\web\pnpm-workspace.yaml") -Force -ErrorAction SilentlyContinue
+# This pnpm bookkeeping file has no runtime role in the hoisted profile, yet
+# records the build machine's store and virtual-store absolute paths.
+$seedModulesMetadata = Join-Path $seedBuildHome "profiles\web\node_modules\.modules.yaml"
+Remove-Item -LiteralPath $seedModulesMetadata -Force -ErrorAction SilentlyContinue
 $unexpectedSeedFiles = Get-ChildItem -LiteralPath $seedBuildHome -Recurse -File | Where-Object {
     $_.Name -eq ".credentials.yaml" -or $_.Name -like "*.log"
 }
@@ -136,7 +163,7 @@ if ($unexpectedSeedFiles) {
     throw "profile seed 包含不应发布的用户数据：$($unexpectedSeedFiles.FullName -join ', ')"
 }
 $seedMetadataFiles = Get-ChildItem -LiteralPath (Join-Path $seedBuildHome "profiles\web") -File |
-    Where-Object { $_.Name -in @("package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "cordis.patch.yml") }
+    Where-Object { $_.Name -in @("package.json", "cordis.patch.yml") }
 foreach ($metadataFile in $seedMetadataFiles) {
     if (Select-String -LiteralPath $metadataFile.FullName -Pattern '(?i)\b[A-Z]:[\\/]' -Quiet) {
         throw "profile seed 元数据包含构建机绝对路径：$($metadataFile.FullName)"

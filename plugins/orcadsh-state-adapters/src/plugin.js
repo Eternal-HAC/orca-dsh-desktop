@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { DSH_ACTIVITY_STATES, reduceActivity } from './activity.js'
+import { DSH_ACTIVITY_STATES, activitySnapshot, reduceActivity } from './activity.js'
 import { initialMetricsState, metricsSnapshot, reduceMetrics } from './metrics.js'
 
 export const name = 'orcadsh-state-adapters'
@@ -26,10 +26,10 @@ export const dshMetricsProjection = {
 
 export const dshActivityProjection = {
   key: 'orcaDshActivity',
-  schema: z.enum(DSH_ACTIVITY_STATES),
+  schema: z.object({ state: z.enum(DSH_ACTIVITY_STATES) }).strict(),
   init: () => 'idle',
   apply: reduceActivity,
-  view: state => state,
+  view: activitySnapshot,
   stateVersion: 1,
 }
 

@@ -5,13 +5,14 @@ fixed `@deepseek-ai/dsh@0.1.0-rc.6` event contract:
 
 - `orcaDshMetrics`: provider usage when available, plus a deliberately marked
   provisional output estimate while streaming.
-- `orcaDshActivity`: `idle`, `waiting`, `thinking`, `tool`, `review`, `done`,
-  and `failed`.
+- `orcaDshActivity`: `{ state }`, where `state` is `idle`, `waiting`,
+  `thinking`, `tool`, `review`, `done`, or `failed`.
 
-The package intentionally has no client bundle or UI. It is not wired into the
-shipping profile in this spike, so its presence cannot alter the current
-runtime, installer, Liang skin, or user DSH_HOME. A later integration should
-add the package to the profile seed and register it with the host patch.
+The package intentionally has no client bundle or UI. Its stable Orca State
+Interface is the standard DSH projection block returned by `session.history`
+and `session.list`: `values.orcaDshMetrics` and `values.orcaDshActivity`.
+The request's `sessionId` supplies the identity, so state remains per-session;
+a future active-session display is only a selector over those snapshots.
 
 `inputTokens` follows DSH rc.6 `TokenUsage.inputTokens` semantics. It excludes
 the separately reported `cacheReadTokens`; callers that need a total prompt

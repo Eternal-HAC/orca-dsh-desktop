@@ -1,0 +1,5 @@
+# Host-only state projections. The browser consumes them through the standard
+# session.history/session.list projection block; no custom route is required.
+- insert:
+    - id: orcadsh-state-adapters
+      name: orcadsh-state-adapters

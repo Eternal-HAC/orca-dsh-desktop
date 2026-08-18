@@ -1,5 +1,7 @@
 export const DSH_ACTIVITY_STATES = Object.freeze(['idle', 'waiting', 'thinking', 'tool', 'review', 'done', 'failed'])
 
+export const activitySnapshot = state => ({ state })
+
 function isFailedToolResult(event) {
   if (event.data?.error) return true
   const result = event.data?.message?.content?.find?.(item => item?.type === 'tool-result')
@@ -39,10 +41,10 @@ export function createDshActivityAdapter() {
   return {
     consume(event) {
       activity = reduceActivity(activity, event)
-      return activity
+      return activitySnapshot(activity)
     },
     snapshot() {
-      return activity
+      return activitySnapshot(activity)
     },
   }
 }
