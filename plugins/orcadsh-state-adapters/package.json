@@ -1,0 +1,23 @@
+{
+  "name": "orcadsh-state-adapters",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pure DSH session metrics and activity projection adapters for OrcaDSH.",
+  "type": "module",
+  "main": "./src/plugin.js",
+  "exports": {
+    ".": "./src/plugin.js",
+    "./metrics": "./src/metrics.js",
+    "./activity": "./src/activity.js"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-session-projection": "0.1.0-rc.6"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "scripts": {
+    "test": "node ./test/adapter-smoke.mjs"
+  }
+}
