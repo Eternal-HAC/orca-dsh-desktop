@@ -16,6 +16,8 @@ $skinVersion = "0.1.4"
 $skinUrl = "https://github.com/kingOfSoySauce/dsh-liang-skin/releases/download/v$skinVersion/$skinPackageId-$skinVersion.tgz"
 $stateAdaptersPackageId = "orcadsh-state-adapters"
 $stateAdaptersSource = Join-Path $root "plugins\$stateAdaptersPackageId"
+$tokenMonitorPackageId = "dsh-client-orca-token-monitor"
+$tokenMonitorSource = Join-Path $root "plugins\$tokenMonitorPackageId"
 New-Item -ItemType Directory -Force -Path $dist, $lib, $buildDir | Out-Null
 
 # ---------- 1. node.exe ----------
@@ -129,7 +131,7 @@ finally {
 
 $seedPackageJson = Join-Path $seedBuildHome "profiles\web\package.json"
 $seedSkinDir = Join-Path $seedBuildHome "profiles\web\node_modules\$skinPackageId"
-if (-not (Test-Path $seedPackageJson) -or -not (Test-Path $seedSkinDir) -or -not (Test-Path $stateAdaptersSource)) {
+if (-not (Test-Path $seedPackageJson) -or -not (Test-Path $seedSkinDir) -or -not (Test-Path $stateAdaptersSource) -or -not (Test-Path $tokenMonitorSource)) {
   throw "默认 skin profile seed 不完整"
 }
 $seedPackage = Get-Content -LiteralPath $seedPackageJson -Raw | ConvertFrom-Json
@@ -147,6 +149,14 @@ if (-not (Test-Path (Join-Path $seedStateAdaptersDir "cordis.patch.yml"))) {
 }
 if ($stateAdaptersPackageId -notin @($seedPackage.dsh.profile.bundles)) {
     $seedPackage.dsh.profile.bundles += $stateAdaptersPackageId
+}
+$seedTokenMonitorDir = Join-Path $seedBuildHome "profiles\web\node_modules\$tokenMonitorPackageId"
+New-Item -ItemType Directory -Force -Path $seedTokenMonitorDir | Out-Null
+foreach ($runtimeItem in @("package.json", "cordis.patch.yml", "src", "lib")) {
+    Copy-Item -LiteralPath (Join-Path $tokenMonitorSource $runtimeItem) -Destination $seedTokenMonitorDir -Recurse -Force
+}
+if ($tokenMonitorPackageId -notin @($seedPackage.dsh.profile.bundles)) {
+    $seedPackage.dsh.profile.bundles += $tokenMonitorPackageId
 }
 $seedPackage | ConvertTo-Json -Depth 12 | Set-Content -Encoding utf8 -Path $seedPackageJson
 # The profile loader consumes package.json, bundle patches, and staged modules;
