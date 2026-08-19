@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -8,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Web.Script.Serialization;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
@@ -345,14 +348,75 @@ namespace DeepSeekHarness
             throw new Exception("等待 dsh 服务就绪超时（90 秒）。" + ErrorTailText());
         }
 
-        // 只在目标 profile 尚不存在时写入随安装包提供的干净 seed；
-        // 用户已有的凭据、会话和配置从不由应用覆盖或删除。
+        // 首次启动写入完整干净 seed；升级时只更新 OrcaDSH 自有 bundle，
+        // 不覆盖用户的凭据、会话、其他插件或 profile 配置。
         private void EnsureDshHomeInitialized()
         {
             Directory.CreateDirectory(dshHome);
             string targetProfile = Path.Combine(dshHome, "profiles", "web");
-            if (Directory.Exists(targetProfile) || !Directory.Exists(profileSeedPath)) return;
-            CopyDirectoryWithoutOverwrite(profileSeedPath, dshHome);
+            if (!Directory.Exists(profileSeedPath)) return;
+            if (!Directory.Exists(targetProfile))
+            {
+                CopyDirectoryWithoutOverwrite(profileSeedPath, dshHome);
+                return;
+            }
+
+            MigrateBundledWebPlugin(targetProfile, "orcadsh-state-adapters");
+            MigrateBundledWebPlugin(targetProfile, "dsh-client-orca-token-monitor");
+        }
+
+        private void MigrateBundledWebPlugin(string targetProfile, string packageId)
+        {
+            string seedProfile = Path.Combine(profileSeedPath, "profiles", "web");
+            string sourcePackage = Path.Combine(seedProfile, "node_modules", packageId);
+            if (!Directory.Exists(sourcePackage)) return;
+
+            string targetPackage = Path.Combine(targetProfile, "node_modules", packageId);
+            CopyDirectoryWithOverwrite(sourcePackage, targetPackage);
+
+            string packageJsonPath = Path.Combine(targetProfile, "package.json");
+            if (!File.Exists(packageJsonPath)) return;
+
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            Dictionary<string, object> root = serializer.Deserialize<Dictionary<string, object>>(
+                File.ReadAllText(packageJsonPath, Encoding.UTF8));
+            Dictionary<string, object> dsh = GetObject(root, "dsh");
+            Dictionary<string, object> profile = GetObject(dsh, "profile");
+            object rawBundles;
+            List<object> bundles = new List<object>();
+            if (profile.TryGetValue("bundles", out rawBundles))
+            {
+                IEnumerable items = rawBundles as IEnumerable;
+                if (items != null)
+                    foreach (object item in items) bundles.Add(item);
+            }
+            if (bundles.Exists(item => string.Equals(item as string, packageId, StringComparison.Ordinal))) return;
+
+            bundles.Add(packageId);
+            profile["bundles"] = bundles.ToArray();
+            string tempPath = packageJsonPath + ".orcadsh.tmp";
+            File.WriteAllText(tempPath, serializer.Serialize(root), new UTF8Encoding(false));
+            File.Replace(tempPath, packageJsonPath, null);
+        }
+
+        private static Dictionary<string, object> GetObject(Dictionary<string, object> parent, string key)
+        {
+            object value;
+            Dictionary<string, object> child;
+            if (parent.TryGetValue(key, out value) && (child = value as Dictionary<string, object>) != null)
+                return child;
+            child = new Dictionary<string, object>();
+            parent[key] = child;
+            return child;
+        }
+
+        private static void CopyDirectoryWithOverwrite(string source, string destination)
+        {
+            Directory.CreateDirectory(destination);
+            foreach (string file in Directory.GetFiles(source))
+                File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), true);
+            foreach (string directory in Directory.GetDirectories(source))
+                CopyDirectoryWithOverwrite(directory, Path.Combine(destination, Path.GetFileName(directory)));
         }
 
         private static void CopyDirectoryWithoutOverwrite(string source, string destination)

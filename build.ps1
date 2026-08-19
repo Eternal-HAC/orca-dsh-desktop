@@ -189,7 +189,7 @@ if (-not $csc) { throw "未找到 csc.exe（需要 .NET Framework 4.8，Windows 
 & $csc /nologo /target:winexe /platform:x64 /optimize+ `
     "/win32icon:$root\icons\DeepSeekHarness.ico" `
     "/out:$dist\DeepSeekHarness.exe" `
-    /r:System.dll /r:System.Core.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll /r:System.Management.dll `
+    /r:System.dll /r:System.Core.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll /r:System.Management.dll /r:System.Web.Extensions.dll `
     "/r:$coreDll" `
     "/r:$lib\Microsoft.Web.WebView2.WinForms.dll" `
     "$root\src\App.cs"
