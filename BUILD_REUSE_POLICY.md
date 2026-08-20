@@ -53,7 +53,7 @@ Orca 自行拥有与其发行、兼容质量或专属体验直接相关的能力
 | IntensityState | BUILD | 建立极薄的 Orca presentation contract，内部归一化为 `0..1`。 |
 | Reasoning Effort UI | ADAPT | 借鉴 Liang/TUI 交互，始终提交 DSH 原始 effort ID。 |
 | Auto Routing | SKIP | 当前不做；未来只能从实验性 recommendation 开始。 |
-| Plugin Manager | REUSE | R1 评估 `dsh-market`；Orca 不建 generic manager。 |
+| Plugin Manager | DEFER | R1.1 已验证 `dshmarket@1.16.0` 的普通 rc.6 Web UI 与隔离 lifecycle，但当前 Orca private runtime 不含其安装动作所需的 pnpm/npm/corepack；上游项目与 release hygiene 仍过新。不得默认 bundle，也不自建 generic manager。 |
 | Settings | REUSE | 使用 DSH settings / 社区 settings，不建 generic framework。 |
 | Historical Stats | SKIP | 不建立历史 analytics 数据库。 |
 | Cost Monitor | SKIP | 当前没有差异化产品需求；未来有证据时再评估 ADAPT。 |
@@ -120,3 +120,7 @@ REUSE / PIN / FORK / REJECT / DEFER
 ```
 
 并附：精确版本、许可状态、资产许可、安装方式、E2E 证据、已知 seam、默认 bundle 决定和复查日期。
+
+## R1.1 dsh-market decision
+
+`dshmarket@1.16.0`（commit `fa5200829cbcc2a0cb4b5e0d2199f74a26f928fc`）记录为 `DEFER`。直接 package 的 MIT 文本、published tarball 和普通 DSH rc.6 lifecycle 已验证；当前不进入 default/optional bundle。重新评估前必须解决 private pnpm 分发、上游 source reproducibility、社区插件 trust UX、精确依赖许可和安全隔离 E2E。详见 `research/R1_DSH_MARKET_SPIKE.md`。
