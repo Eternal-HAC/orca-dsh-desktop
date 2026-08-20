@@ -7,6 +7,8 @@
 
 ## R0 — Route Freeze / Release Hygiene
 
+阶段状态：**COMPLETE**（2026-08-20）。Public release blockers 和 release-candidate-only verification 按下方 closure disposition 保持开放，不阻止 R1 隔离 spike。
+
 ### Goal
 
 冻结新路线，修复项目身份、文档、许可和兼容证据，使仓库具备可审查的 release gate。
@@ -15,6 +17,7 @@
 
 - R0.1：建立 canonical project documentation。
 - R0.2：修正 README、CHANGELOG、THIRD_PARTY_NOTICES、BUILD 文档与产品身份漂移。
+- R0.3：用 repository-controlled policy 阻止未经批准的 public release，并把回归分为 automated、manual/E2E、release-only。
 - 审计 Liang 代码与人物素材授权，获得许可或制定替换/移除方案。
 - 固化 existing-profile、session switching、estimated→exact、Liang coexistence 和 zero-orphan regression。
 - 建立人工可维护的兼容矩阵。
@@ -42,6 +45,28 @@
 - `BUILD_REUSE_POLICY.md`、`ROADMAP.md`。
 - `PROJECT_STATUS.md`、`ORCA_COMPATIBILITY.md`。
 - 更新后的 release/legal hygiene 文档与回归记录。
+- `release-policy.json`、release gate 和轻量 baseline/policy validation scripts。
+
+### R0 closure disposition
+
+R0 governance 已完成。以下未关闭事项保留其原有严格要求，不因进入 R1 而弱化：
+
+- **Public release blockers**：Liang 获得明确再分发权或从 public artifact 移除/替换；完成实际 bundled transitive dependency tree 的法律审计。
+- **Release-candidate-only verification，defer to R4**：最终 installed-tree LICENSE/NOTICE；restart/reinstall 后 credentials、sessions、config 可读取；候选 Setup version/SHA/commit/evidence 对应。
+- `release-policy.json` 在 blocker 关闭前继续默认拒绝 public release。
+
+Next phase 是 R1 Community Integration Spikes。Next Approved Work 仅为 R1.1 `dsh-market` isolated integration spike。R1 仍只允许依次隔离验证 `dsh-market`、`dsh-context`、`dsh-pet`；任何候选都不得因 spike 自动进入默认 bundle。
+
+### Future identity migration plan
+
+Identity migration 不阻塞 R0，本轮不实施。建议按以下顺序单独设计、构建和验证：
+
+1. **显示文案**：窗口标题、托盘文案、installer `APP_NAME`、welcome 文案和 Publisher。影响用户可见身份；installer `APP_NAME` 同时参与 uninstall registry key 与快捷方式路径，不能只当文案替换。
+2. **installer compatibility**：先定义旧 `DeepSeek Harness` uninstall key、开始菜单目录、桌面快捷方式和 `%LOCALAPPDATA%\Programs\OrcaDSH` 的升级/清理策略，再迁移 `APP_NAME`。安装目录当前已是 OrcaDSH，优先保持稳定以保护 in-place upgrade。
+3. **single-instance and window discovery**：成对迁移 mutex `DeepSeekHarness.Desktop.SingleInstance`、窗口标题和 `FindWindow`。需要兼容旧进程，避免新旧版本并行启动或第二实例无法唤醒第一实例。
+4. **executable/icon and cleanup**：迁移 `DeepSeekHarness.exe/.ico` 时同步 compiler output、installer `APP_EXE`、快捷方式、DisplayIcon 和任何 process/path-based cleanup；用 upgrade 与 explicit-exit smoke 验证。
+5. **artifact/CI paths**：最后迁移 `dist/DeepSeekHarness`、Setup/ZIP filename、`package-release.ps1` 外层目录和 Actions artifact glob。此层不应先于 build/installer consumers。
+6. **technical identifiers**：C# namespace 可独立迁移，用户行为影响低；默认 version 常量应在正式 Orca version policy 确定后统一处理，不能借 identity rename 伪造 release history。
 
 ## R1 — Community Integration Spikes
 

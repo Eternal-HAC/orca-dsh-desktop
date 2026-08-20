@@ -6,7 +6,7 @@
 
 状态说明：
 
-- `REVIEWED`：当前仓库中存在可核对的直接许可证据；正式发行仍需确认要求的文本实际进入最终产物。
+- `REVIEWED`：当前仓库中存在可核对的直接许可证据，且本文件会说明 development artifact 中的携带位置；它不表示完整依赖树已审计。
 - `REVIEW`：来源或许可证材料存在，但最终打包、完整依赖或再分发条件尚未完成核对。
 - `BLOCKED`：缺少正式公开发行所需的关键代码或资产授权证据。
 
@@ -18,13 +18,15 @@
 - Import anchor: `cf047b58f05b46f9e2890f7b934bdf66e5d8ce88`
 - Repository role: OrcaDSH 的 WinForms + WebView2 reference host、build 和 NSIS baseline。
 - Evidence: 导入仓库根目录保留 [LICENSE](LICENSE)，内容为 MIT License；Git remote `upstream` 保留来源 URL。
-- Status: `REVIEWED` for repository attribution。后续 Orca 修改由本仓库维护；历史来源不可从 NOTICE 或 Git history 中删除。
+- Artifact path: `licenses/OrcaDSH-LICENSE.txt`；本文件以 `THIRD_PARTY_NOTICES.md` 位于 app root。
+- Status: `REVIEWED` for repository attribution and direct artifact staging。后续 Orca 修改由本仓库维护；历史来源不可从 NOTICE 或 Git history 中删除。
 
 ### DeepSeek Harness
 
 - Component: `@deepseek-ai/dsh@0.1.0-rc.6` 及随其安装的 `@deepseek-ai/*` packages。
 - Source: [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 - Evidence: 当前构建树中的 `node_modules/@deepseek-ai/dsh/LICENSE` 是 MIT License，copyright `2026 DeepSeek`；该文件随 DSH package 位于 `node_modules`。
+- Artifact path: `node_modules/@deepseek-ai/dsh/LICENSE`。
 - Orca usage: 以未修改的 `dsh web` profile 启动；OrcaDSH 不 fork 或 patch DSH core。
 - Status: direct `@deepseek-ai/dsh` package `REVIEWED`。其余 `@deepseek-ai/*` packages 和完整 transitive tree 仍属于依赖树审计范围，不能由顶层 package 的 license 字段代替。
 
@@ -32,8 +34,9 @@
 
 - Component: Node.js `v24.14.0` Windows x64 `node.exe`。
 - Source: [nodejs.org](https://nodejs.org/) / official `node-v24.14.0-win-x64.zip`。
-- Evidence: 官方下载 archive 在构建期包含 `LICENSE`；当前 `build.ps1` 只把固定版本的 `node.exe` 复制到应用目录。
-- Status: `REVIEW`。正式发行前必须确认 Node.js 完整 LICENSE 和其中的第三方许可汇总随最终 Setup/zip 提供；当前 repository NOTICE 不能替代该大文件中的全部内容。
+- Evidence: 官方下载 archive 在构建期包含 `LICENSE`；`build.ps1` 从同一固定版本解压目录复制原文，不重写正文。
+- Artifact path: `licenses/Node-LICENSE.txt`。
+- Status: `REVIEWED` for the direct Node archive evidence and artifact staging。该状态不替代完整 transitive dependency review。
 
 ### Microsoft WebView2 SDK assemblies
 
@@ -41,7 +44,8 @@
 - SDK version: `1.0.4129.50`。
 - Source: [Microsoft.Web.WebView2 NuGet package](https://www.nuget.org/packages/Microsoft.Web.WebView2/1.0.4129.50)。
 - Evidence: 构建期 NuGet package 内含 `LICENSE.txt` 和 `NOTICE.txt`；NuGet metadata 将 `LICENSE.txt` 声明为 package license。
-- Status: `REVIEWED` for the SDK package evidence；`REVIEW` for final packaging，因为当前 build 复制 DLL，但没有显式复制 NuGet `LICENSE.txt` / `NOTICE.txt` 到应用根目录。
+- Artifact paths: `licenses/WebView2-LICENSE.txt`、`licenses/WebView2-NOTICE.txt`。
+- Status: `REVIEWED` for the SDK package evidence and direct artifact staging；许可证正文直接来自固定版本 NuGet extract。
 
 ### Microsoft Edge WebView2 Evergreen Runtime
 
@@ -57,6 +61,8 @@
 - `dsh-client-orca-token-monitor@0.1.0`
 
 它们适用仓库根目录 [LICENSE](LICENSE) 的 MIT License。两个 package 当前没有独立 LICENSE 文件；这不扩展到它们引用或随 profile 一起分发的第三方 dependencies。若未来复制 substantial third-party code，必须单独记录来源、版本、修改和许可。
+
+发行 artifact 使用 `licenses/OrcaDSH-LICENSE.txt` 携带同一份 repository LICENSE 原文。
 
 ## Blocked component: Liang development skin
 
@@ -99,11 +105,11 @@ Formal public OrcaDSH release is blocked while redistribution rights remain unre
 正式公开 OrcaDSH release 至少需要：
 
 1. 关闭 Liang 代码与全部媒体素材的再分发 blocker，或从 release 内容中合法移除/替换。
-2. 确认 Node.js 完整许可证汇总随产物提供。
-3. 确认 WebView2 SDK `LICENSE.txt` / `NOTICE.txt` 和其他必需文本随产物提供。
-4. 对实际锁定的 npm dependency tree 完成可追溯审计或获得足够的自动化报告并人工复核。
-5. 将本文件、根 LICENSE 和所需第三方文本纳入最终安装包/压缩包，并从安装后的文件验证。
-6. 通过 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 的法律和兼容 gate。
+2. 对实际锁定的 npm dependency tree 完成可追溯审计或获得足够的自动化报告并人工复核。
+3. 在真实 release-candidate ZIP 与 installed tree 复核本文件和 `licenses/` 中的 direct evidence。
+4. 通过 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 的法律和兼容 gate。
+
+当前 build staging 会携带 Node、WebView2 SDK、repository/upstream attribution 的上述直接证据。该改进只关闭已知 direct artifact omission，不构成“完整法律合规”或“全部依赖许可证已验证”。
 
 ## Trademarks
 

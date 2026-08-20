@@ -8,19 +8,22 @@
 ```text
 P0.9.1: Complete
 R0.1 / R0.1.1: Review complete
-R0.2: Release / Legal / Identity Hygiene, awaiting review
+R0.2: Review complete
+R0.3: Review complete
+R0.4: Review complete
+R0: Complete
+Next phase: R1 Community Integration Spikes
 ```
 
-本轮之后没有获批的新功能、runtime、installer、社区插件或 release 工作。
+Public release remains `BLOCKED`。当前只批准 R1.1 `dsh-market` isolated integration spike；不得默认 bundle，不得顺带开始 `dsh-context`、`dsh-pet` 或其他功能实现。
 
 ## Git baseline
 
 ```text
 branch: main
-HEAD: 37f4f59e57797c6739316f1e0ce13c7483b09818
-HEAD subject: fix: load token monitor for existing profiles
-origin/main: 07bd4b2d7c7e39e1a9c796566f3c41aee7e8c213
-local main: ahead 1
+closure starting HEAD: ec49b353b45c599dc63ce260cc2924530b381f86
+closure starting origin/main: 37f4f59e57797c6739316f1e0ce13c7483b09818
+R0 closure baseline: this document's containing commit
 ```
 
 `deep-research-report.md` 是未跟踪的研究输入，不是 canonical specification。
@@ -54,6 +57,10 @@ local main: ahead 1
 | Explicit exit cleanup | PASS | orphan Orca node/DSH process count = 0。 |
 | Uninstall install-dir removal | PASS | `%LOCALAPPDATA%\Programs\OrcaDSH` 删除。 |
 | Uninstall user data retention | PASS | `%LOCALAPPDATA%\OrcaDSH` 保留。 |
+| New-session empty Orca projections | PASS | 隔离 DSH_HOME runtime；Monitor 全部为空值并显示 Idle。 |
+| Session A/B projection switching | PASS | 隔离 DSH_HOME runtime；A 的 metrics/Failed 与 B 的空值/Idle 双向切换。 |
+| Web client refresh projection restore | PASS | 隔离 `dsh web` 客户端刷新后恢复 A/B 对应 projection；未宣称为 WinForms WebView2 专项 E2E。 |
+| Isolated DSH host restart retention | PASS | 同一隔离 DSH_HOME 重启 host 后，session、metrics、activity 可重新读取。 |
 
 ## 当前 release blockers
 
@@ -63,25 +70,34 @@ local main: ahead 1
 
 ### Release hygiene
 
-R0.2 working tree 已重写 README、CHANGELOG、THIRD_PARTY_NOTICES 和 BUILD 文档，并新增人工 release checklist。当前 build 仍未把 Node 完整许可证汇总、WebView2 SDK LICENSE/NOTICE 和 repository NOTICE 显式复制到最终发行根目录；transitive npm dependency 审计也未完成。
+R0.4 build 已将当前有明确来源的 direct redistribution evidence 纳入 staging：`licenses/OrcaDSH-LICENSE.txt`、`Node-LICENSE.txt`、`WebView2-LICENSE.txt`、`WebView2-NOTICE.txt`，以及 app root 的 `THIRD_PARTY_NOTICES.md`。DSH LICENSE 继续位于 package tree。Development staging 与 ZIP 已验证 PASS，NSIS Setup 构建 PASS；installed tree 尚未在隔离 Windows 用户/机器实际验证。transitive npm dependency 审计仍未完成。
 
-GitHub Actions 的 `v*` tag 和手动 workflow 均可直接调用 release action，当前没有 Liang/legal approval gate。正式公开 release 前必须关闭或移除该绕过路径。
+R0.3 working tree 新增 repository-controlled `release-policy.json` 和共用 gate。`v*` tag 与手动 workflow 均在上传前执行同一个 approval check；当前 policy 默认为 blocked，原因是 Liang redistribution rights unresolved。该修改尚未 commit/push，因此远端 workflow 仍未获得保护。
 
 Installer、exe、namespace、mutex、artifact path 和默认 `0.2.0` build/version 常量等仍保留 pre-Orca legacy identifier。为避免扩大本轮到 runtime/installer identity migration，R0.2 只记录这些 seam，没有机械重命名。
 
 ### Regression formalization
 
-已建立 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 人工清单并区分 PASS / NOT VERIFIED。重启/重装数据可读取性、session A/B、WebView refresh 和最终 installed-file license audit 仍缺少明确证据；尚无机器可读 manifest。
+已将 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 分为 AUTOMATED、MANUAL/E2E、RELEASE-ONLY，并新增轻量 baseline/policy scripts。隔离 runtime 已验证 new-session、session A/B、client refresh 和 DSH host restart。完整 WinForms/Setup 重装后的 credentials、sessions、config 可读取性仍是 `NOT TESTABLE`：当前 App 固定使用真实 `%LOCALAPPDATA%\OrcaDSH`，环境变量不能安全重定向 `.NET Environment.GetFolderPath(LocalApplicationData)`，本轮禁止触碰真实用户数据或改 runtime test seam。
 
 ## 未验证
 
 - `dsh-market`、`dsh-context`、`dsh-pet` 与 Orca rc.6 的真实兼容性。
-- 重启或重装后 credentials、sessions 和配置仍可读取的逐项 smoke；当前只有 DSH_HOME 目录在卸载后保留的明确证据。
+- WinForms/Setup 重启或重装后 credentials、sessions 和配置仍可读取的逐项隔离 smoke；当前只有隔离 DSH host restart 与卸载后真实 DSH_HOME 目录保留证据。
 - OrcaIntensityState 的 contract 和 portability。
 - 未来 DSH 版本升级。
 - Liang 是否存在仓库外授权。
 - 研究报告中的动态 stars、plugin 数量和其他时间敏感生态数据。
+- R0.4 Setup 安装后的实际 license/NOTICE tree；当前 installer 会写真实快捷方式和 HKCU uninstall key，不能在本机无副作用隔离。
+
+## R0 closure and release classification
+
+- **R0 governance — COMPLETE**：canonical product/architecture/decision documents、Build/Reuse policy、compatibility baseline、release checklist、README/CHANGELOG/NOTICE hygiene、release gate、direct redistribution evidence baseline 和 regression classification 已完成 review。
+- **Public release blocker**：Liang redistribution rights unresolved；实际 bundled transitive dependency tree 的法律审计仍未完成。
+- **Release-candidate-only verification — DEFER TO R4**：候选 Setup 的 installed-tree LICENSE/NOTICE、restart/reinstall credentials/session/config readability，以及 Setup SHA/version/commit/evidence 对应。
+
+Open public-release 和 release-candidate-only 项不阻止 R1 isolated community integration spikes，但继续阻止任何 public OrcaDSH release。
 
 ## Next Approved Work
 
-当前获批工作到 R0.2 Release / Legal / Identity Hygiene 为止。下一步是项目所有者 review 本轮文档与 workflow audit；未获新批准前，不修改 release workflow、installer/runtime identity、bundle、plugins 或 DSH core，不创建 tag 或 public release。
+R0 已关闭。Next Approved Work：**R1.1 `dsh-market` isolated integration spike**。本状态更新不启动 R1.1；未获单独执行指令前，不安装社区插件、不修改默认 bundle、runtime、installer、plugins 或 DSH core，不创建 tag 或 public release。

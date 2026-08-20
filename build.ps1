@@ -24,13 +24,16 @@ New-Item -ItemType Directory -Force -Path $dist, $lib, $buildDir | Out-Null
 Write-Host "==> [1/6] bundled Node.js $bundledNodeVersion"
 $nodeZip = Join-Path $env:TEMP "node-$bundledNodeVersion-win-x64.zip"
 $nodeExtractDir = Join-Path $env:TEMP "node-$bundledNodeVersion-win-x64"
-$bundledNodeSource = Join-Path $nodeExtractDir "node-$bundledNodeVersion-win-x64\node.exe"
+$bundledNodeRoot = Join-Path $nodeExtractDir "node-$bundledNodeVersion-win-x64"
+$bundledNodeSource = Join-Path $bundledNodeRoot "node.exe"
+$bundledNodeLicense = Join-Path $bundledNodeRoot "LICENSE"
 if (-not (Test-Path $bundledNodeSource)) {
     Write-Host "    downloading Node.js $bundledNodeVersion ..."
     Invoke-WebRequest -Uri "https://nodejs.org/dist/$bundledNodeVersion/node-$bundledNodeVersion-win-x64.zip" -OutFile $nodeZip
     Expand-Archive -LiteralPath $nodeZip -DestinationPath $nodeExtractDir -Force
 }
 if (-not (Test-Path $bundledNodeSource)) { throw "固定 Node.js runtime 缺失：$bundledNodeSource" }
+if (-not (Test-Path $bundledNodeLicense)) { throw "固定 Node.js LICENSE 缺失：$bundledNodeLicense" }
 $actualBundledNodeVersion = (& $bundledNodeSource --version).Trim()
 if ($actualBundledNodeVersion -ne $bundledNodeVersion) {
     throw "固定 Node.js runtime 版本不匹配：预期 $bundledNodeVersion，实际 $actualBundledNodeVersion"
@@ -40,7 +43,10 @@ Copy-Item -LiteralPath $bundledNodeSource -Destination (Join-Path $dist "node.ex
 # ---------- 2. WebView2 程序集 ----------
 Write-Host "==> [2/6] WebView2 assemblies"
 $coreDll = Join-Path $lib "Microsoft.Web.WebView2.Core.dll"
-if (-not (Test-Path $coreDll)) {
+$webView2Extract = Join-Path $lib "extract"
+$webView2License = Join-Path $webView2Extract "LICENSE.txt"
+$webView2Notice = Join-Path $webView2Extract "NOTICE.txt"
+if (-not (Test-Path $coreDll) -or -not (Test-Path $webView2License) -or -not (Test-Path $webView2Notice)) {
     $nupkg = Join-Path $lib "webview2.nupkg"
     Write-Host "    downloading Microsoft.Web.WebView2 $WebView2Version ..."
     Invoke-WebRequest -Uri "https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/$WebView2Version/microsoft.web.webview2.$WebView2Version.nupkg" -OutFile $nupkg
@@ -54,6 +60,24 @@ if (-not (Test-Path $coreDll)) {
 Copy-Item -LiteralPath $coreDll -Destination $dist -Force
 Copy-Item -LiteralPath (Join-Path $lib "Microsoft.Web.WebView2.WinForms.dll") -Destination $dist -Force
 Copy-Item -LiteralPath (Join-Path $lib "WebView2Loader.dll") -Destination $dist -Force
+
+# ---------- 2b. direct redistribution license evidence ----------
+Write-Host "==> [2b] direct redistribution LICENSE / NOTICE"
+$licenseDir = Join-Path $dist "licenses"
+if (Test-Path $licenseDir) { Remove-Item -LiteralPath $licenseDir -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $licenseDir | Out-Null
+$repositoryLicense = Join-Path $root "LICENSE"
+$repositoryNotices = Join-Path $root "THIRD_PARTY_NOTICES.md"
+foreach ($requiredLicenseSource in @($repositoryLicense, $repositoryNotices, $bundledNodeLicense, $webView2License, $webView2Notice)) {
+    if (-not (Test-Path -LiteralPath $requiredLicenseSource -PathType Leaf)) {
+        throw "Direct redistribution license source missing: $requiredLicenseSource"
+    }
+}
+Copy-Item -LiteralPath $repositoryLicense -Destination (Join-Path $licenseDir "OrcaDSH-LICENSE.txt") -Force
+Copy-Item -LiteralPath $bundledNodeLicense -Destination (Join-Path $licenseDir "Node-LICENSE.txt") -Force
+Copy-Item -LiteralPath $webView2License -Destination (Join-Path $licenseDir "WebView2-LICENSE.txt") -Force
+Copy-Item -LiteralPath $webView2Notice -Destination (Join-Path $licenseDir "WebView2-NOTICE.txt") -Force
+Copy-Item -LiteralPath $repositoryNotices -Destination (Join-Path $dist "THIRD_PARTY_NOTICES.md") -Force
 
 # ---------- 3. dsh 依赖（扁平布局 node_modules） ----------
 Write-Host "==> [3/6] dsh dependencies (node-linker=hoisted)"

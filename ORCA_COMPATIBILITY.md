@@ -75,10 +75,21 @@ Orca-owned plugin packages are copied into the profile seed at build time。最�
 | Reasoning token absent remains `null` / `—` | PASS |
 | Liang and Token Monitor coexist | PASS |
 | Explicit exit leaves zero Orca node/DSH processes | PASS |
-| Reinstall/restart retains credentials, sessions and configuration | NOT VERIFIED; no itemized, durable smoke evidence found |
+| New session starts with empty Orca projections | PASS in isolated DSH_HOME runtime |
+| Session A/B selects per-session projections | PASS in isolated DSH_HOME runtime |
+| Standard web-client refresh restores projection-backed Monitor | PASS in isolated `dsh web`; WinForms WebView2-specific refresh not rerun |
+| Same isolated DSH_HOME survives DSH host restart | PASS; session, metrics and activity remained readable |
+| Full WinForms/Setup restart or reinstall retains credentials, sessions and configuration | NOT TESTABLE without touching real `%LOCALAPPDATA%\OrcaDSH` or adding a test seam |
 | Uninstall removes app and preserves DSH_HOME | PASS |
 
-尚未把 session A/B switching、streaming estimated→exact 和全部 existing-profile permutations 固化为正式 release checklist；它们属于 R0 regression work。
+`RELEASE_CHECKLIST.md` 记录 AUTOMATED、MANUAL/E2E 和 RELEASE-ONLY 的职责边界。历史 PASS 仍需在每个候选 Setup 上重跑。
+
+## Public release policy
+
+- `release-policy.json` 是 public release approval 的 repository-controlled state。
+- `.github/workflows/release.yml` 的 tag 与 `workflow_dispatch` 共用 `scripts/Test-ReleasePolicy.ps1 -RequirePublicReleaseApproval`。
+- 当前 `publicReleaseApproved` 为 `false`；workflow 可完成 build/package，但在 GitHub Release upload 前失败。
+- 未来只能通过 reviewed repository change 关闭 blocker；CI secret 或临时 workflow input 不能覆盖 policy。
 
 ## Known rc.6 compatibility seams
 
@@ -142,3 +153,16 @@ conversation.input.left
 - `N/A`：未 bundle，仅记录接口思想且未复制代码或资产。
 
 当前 Liang 为 `BLOCKED`。Orca-owned package 使用本仓库 MIT，但未来若复制第三方 substantial code，必须在 notices 中单独记录来源和许可。
+
+## Direct artifact evidence snapshot
+
+当前 `dist/DeepSeekHarness` 中：
+
+- DSH 自身 package 目录携带 `@deepseek-ai/dsh/LICENSE`。
+- `licenses/Node-LICENSE.txt` 与固定 Node archive 的官方 LICENSE SHA-256 完全一致。
+- `licenses/WebView2-LICENSE.txt`、`licenses/WebView2-NOTICE.txt` 与固定 WebView2 NuGet extract 完全一致。
+- `licenses/OrcaDSH-LICENSE.txt` 与 repository root LICENSE 完全一致。
+- app root `THIRD_PARTY_NOTICES.md` 与 repository source 完全一致，并记录 upstream desktop attribution。
+- Liang package 没有 LICENSE/NOTICE，redistribution status 继续为 `BLOCKED`。
+
+R0.4 development staging 与 ZIP 内容检查 PASS，NSIS Setup 构建 PASS。Setup installed tree 尚未在隔离 Windows 用户/机器执行，因此为 `NOT VERIFIED`。这只是直接关键组件证据，不代表 transitive npm dependency tree 已完成审计或完整法律合规。

@@ -57,6 +57,10 @@ jobs:
         shell: pwsh
         run: ./package-release.ps1 -Version ${{ steps.ver.outputs.version }}
 
+      - name: Enforce public release policy
+        shell: pwsh
+        run: ./scripts/Test-ReleasePolicy.ps1 -RequirePublicReleaseApproval
+
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
