@@ -1,5 +1,7 @@
 # OrcaDSH Source Reuse Review
 
+> **Historical research snapshot — 2026-08-18.** Some upstream behavior, packaging, and license findings have changed since this review. It must not be used as the current canonical recommendation. See [BUILD_REUSE_POLICY.md](BUILD_REUSE_POLICY.md), [ARCHITECTURE.md](ARCHITECTURE.md), [DECISIONS.md](DECISIONS.md), and [ORCA_COMPATIBILITY.md](ORCA_COMPATIBILITY.md). Retained for project history and source-tracing.
+
 日期：2026-08-18  
 范围：只读核对下列公开仓库的 `main` / `master` 源码、README、插件清单与许可证。本文件不代表已在 OrcaDSH 或 DSH `0.1.0-rc.6` 上完成兼容性验证。
 

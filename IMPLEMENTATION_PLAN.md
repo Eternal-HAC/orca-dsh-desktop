@@ -1,5 +1,7 @@
 # OrcaDSH v0.1 P0 实施计划
 
+> **Historical document.** This plan records the original P0 execution sequence, which has now completed through P0.9.1. Current work is governed by [ROADMAP.md](ROADMAP.md), [PROJECT_STATUS.md](PROJECT_STATUS.md), and [BUILD_REUSE_POLICY.md](BUILD_REUSE_POLICY.md). Retained for project history.
+
 日期：2026-08-17
 
 ## 验收目标

@@ -1,5 +1,7 @@
 # OrcaDSH v0.1 架构审查
 
+> **Historical document.** This is the approved 2026-08-17 v0.1 baseline review. It is superseded by [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), and [DECISIONS.md](DECISIONS.md), and is retained for project history.
+
 日期：2026-08-17  
 状态：已批准，P0 基线验证中
 

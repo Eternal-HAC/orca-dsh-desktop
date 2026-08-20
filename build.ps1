@@ -1,4 +1,4 @@
-﻿# build.ps1 - 一键构建 DeepSeek Harness Desktop 便携版
+﻿# build.ps1 - 一键构建 OrcaDSH Windows 开发版
 # 用法: ./build.ps1  （需要联网；Windows PowerShell / pwsh）
 param(
     [string]$DshVersion = "0.1.0-rc.6",
@@ -199,14 +199,16 @@ Copy-Item -LiteralPath (Join-Path $root "icons\DeepSeekHarness.ico") -Destinatio
 # ---------- 5. 使用说明 ----------
 Write-Host "==> [5/6] write 使用说明.txt"
 @"
-DeepSeek Harness 桌面版
+OrcaDSH Windows 开发构建
 ========================
 1. 双击 DeepSeekHarness.exe 即可使用
    （或双击「install.bat / 一键安装.bat」自动在桌面与开始菜单创建快捷方式）
 2. 首次打开请在界面中配置 DeepSeek API Key
-3. 关闭窗口即停止服务
+3. 点击窗口 X 会最小化到系统托盘，DSH 服务继续运行
+4. 如需完全退出，请在托盘菜单选择「真正退出」；应用会停止服务并清理进程树
 
-系统要求：Windows 10/11 x64（自带 .NET Framework 4.8 与 WebView2 运行时）。
+系统要求：Windows 10/11 x64、.NET Framework 4.8 与 WebView2 Evergreen Runtime。
+如缺少 WebView2 Runtime，应用启动时会提示从 Microsoft 官方地址下载安装。
 请保持整个文件夹完整（node.exe / node_modules / DLL 与 exe 同目录），不要单独移动 exe。
 如需卸载，运行 uninstall.bat 删除快捷方式，再删除本文件夹即可。
 "@ | Set-Content -Encoding utf8 -Path (Join-Path $dist "使用说明.txt")

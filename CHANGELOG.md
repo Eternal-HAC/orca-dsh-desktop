@@ -1,73 +1,55 @@
 # Changelog
 
-本项目所有重要改动记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+OrcaDSH 的重要开发变化记录在本文件中。当前尚未声明或发布任何正式 OrcaDSH 版本；版本语义和 release gate 未关闭前，所有 Orca 工作统一记录在 `[Unreleased]`。
+
+格式参考 [Keep a Changelog](https://keepachangelog.com/)。本文件中的 imported upstream version 不代表 OrcaDSH release 或 tag。
 
 ## [Unreleased]
 
-### 变更 (Changed)
-- **托盘恢复改为单击**：原需双击托盘图标或右键「显示主界面」才能恢复窗口，现改为**单击托盘图标**即可恢复，更顺手；右键菜单仍保留「显示主界面 / 真正退出」。
+### Added
 
-## [0.3.0] - 2026-08-16
+- 以 `baiqingyuan/deepseek-harness_Desktop` 为 Windows reference host 基线，建立 OrcaDSH 独立产品路线和 canonical project documentation。
+- 固定 bundled Node.js `v24.14.0` 与 `@deepseek-ai/dsh@0.1.0-rc.6`。
+- 使用 `%LOCALAPPDATA%\OrcaDSH` 作为独立 DSH_HOME，并由用户级 NSIS Setup 安装到 `%LOCALAPPDATA%\Programs\OrcaDSH`。
+- 通过 DSH profile seed 预置 Orca-owned `orcadsh-state-adapters` 和 `dsh-client-orca-token-monitor`。
+- 增加 per-session Metrics / Activity projections 和 Token Monitor MVP。
+- 为已有 web profile 增加只迁移 Orca-owned bundles 的增量 migration。
+- 建立 release/legal/compatibility policy、人工兼容矩阵和 release regression checklist。
 
-> 托盘常驻：关闭窗口不再直接停服务，而是最小化到系统托盘继续运行，避免误关后重等启动；并提供「真正退出」菜单彻底关闭。
+### Changed
 
-> **已发布**：[Release v0.3.0](https://github.com/baiqingyuan/deepseek-harness-Desktop--/releases/tag/v0.3.0) 包含 zip（便携版）与 `Setup.exe`（NSIS 安装包）两个产物，由 CI 自动构建发布（`release.yml` 打 `v0.3.0` tag 触发）。
+- 产品定位调整为 Orca Experience Distribution、Curated Compatibility Distribution 和 Lightweight Windows Reference Host。
+- README、构建说明和第三方声明开始使用 OrcaDSH 身份，并区分用户体验名称与 legacy runtime filename。
+- 明确窗口 `X` 最小化到托盘；托盘“真正退出”才停止 DSH 并清理进程树。
 
-### 新增 (Added)
-- **托盘常驻（最小化到托盘）**：点击窗口关闭按钮不再直接终止 dsh 本地服务，而是最小化到系统托盘并保持服务运行；双击托盘图标或右键「显示主界面」即可恢复窗口。首次最小化会弹出气泡提示说明。
-- **「真正退出」菜单**：托盘右键菜单新增「真正退出」项，点击后隐藏托盘图标并彻底清理 dsh 进程树再退出，区别于「最小化到托盘」。
-- **单实例呼起兼容隐藏态**：当应用已最小化到托盘时，重复双击 exe 仍可将已隐藏窗口恢复到前台（原逻辑依赖窗口可见性，已兼容隐藏态）。
+### Release blockers
 
-## [0.2.0] - 2026-08-16
+- `dsh-client-liang-intensity-skin@0.1.4` 仅用于 development compatibility testing；代码和媒体素材再分发证据未解决，正式公开 release 被阻塞。
+- 直接分发组件和 transitive npm dependency 的完整许可证打包审计尚未完成。
+- GitHub Actions 仍可由 `v*` tag 或手动 workflow 直接创建 Release，尚未加入法律 gate。
 
-> 面向「开箱即用、少部署、少求助」的一次集中打磨：修复了桌面壳的多处运行时缺陷，并大幅简化构建与发布流程。
+## Imported upstream history / pre-Orca baseline
 
-> **已发布**：[Release v0.2.0](https://github.com/baiqingyuan/deepseek-harness-Desktop--/releases/tag/v0.2.0) 包含两个产物 —— `DeepSeekHarness-Desktop-v0.2.0-win-x64.zip`（便携版）与 `DeepSeekHarness-Setup-v0.2.0-win-x64.exe`（NSIS 安装包）。CI 已构建验证（`build.ps1` 第 6 步 NSIS 定位修复见 `bbb2599`）。
+以下记录来自导入的 [`baiqingyuan/deepseek-harness_Desktop`](https://github.com/baiqingyuan/deepseek-harness_Desktop) 历史，覆盖仓库提交 `924f4db` 至 Orca 导入锚点 `cf047b5`。它们描述的是 pre-Orca Windows desktop baseline，保留用于 attribution 和实现溯源。
 
-### 修复 (Fixed)
-- **启动期界面卡死（白屏）**：原 `StartServerIfNeeded()` 在 UI 线程同步 `Thread.Sleep` 等待 dsh 服务，最长冻结 90 秒。改为 `async/await + Task.Delay`，启动期间窗口可响应并显示「正在启动本地服务…（已等待 N 秒）」加载提示。
-- **关窗残留子进程**：原 `Process.Kill()` 只杀 node 父进程，dsh 衍生的子进程会残留。新增 `KillProcessTree()`，通过 WMI 递归清理整棵进程树，真正做到「关窗即停」。
-- **多实例互相误杀**：原逻辑在端口被占用时接管对方进程，关掉第二个实例会把第一个实例的服务也杀掉。新增单实例 `Mutex`，第二个实例仅把已运行窗口提到前台并退出，不再拉起/接管服务。
+这些版本号、发布日期和历史发布声明不属于 OrcaDSH，也不证明 Eternal-HAC/orca-dsh-desktop 曾发布相应 release 或 tag。
 
-### 新增 (Added)
-- **WebView2 运行时缺失 → 一键引导安装**：启动前自动探测 WebView2 运行时，缺失时弹窗询问「是否立即下载安装」，点「是」后自动静默安装并重新初始化，不再黑屏报错。
-- **友好的缺失文件提示**：`node.exe` 或 dsh 文件被杀软误删时，提示文案改为中文并指明去 GitHub Releases 下载完整包。
-- **端口占用明确提示**：端口 `3080` 被非本应用进程占用时，明确提示「端口被占用，请关闭占用程序后重试」，避免静默显示他人内容。
-- **导航失败提示与错误落盘**：WebView2 初始化失败时弹一次友好提示；原始异常同时写入 `dsh-app-error.log` 便于排查。
-- **一键安装脚本**：发布包内置 `install.bat` / `uninstall.bat`，双击即在桌面与开始菜单创建/移除 `DeepSeek Harness` 快捷方式，无需管理员权限（调用系统 `WScript.Shell` 生成 `.lnk`，零额外依赖）。
-- **CI 手动一键发布**：`.github/workflows/release.yml` 新增 `workflow_dispatch` 的 `version` 输入，在 Actions 页面填版本号即可构建并发布，无需先打 tag。
-- **NSIS 安装包（Setup.exe）**：构建流程新增 `installer.nsi` 与第 6 步，自动下载 NSIS 并编译出 `DeepSeekHarness-Setup-vX.Y.Z-win-x64.exe`。用户双击按向导安装到用户目录（无需管理员权限），自动创建桌面/开始菜单快捷方式并注册到「添加/删除程序」，可在系统设置中一键卸载；CI 同时上传 zip 与 Setup.exe 两种产物。
+### [Imported upstream 0.3.0] - 2026-08-16
 
-### 变更 (Changed)
-- **构建自动化**：`build.ps1` 在未检测到 `pnpm` 时自动 `corepack enable` / `npm i -g pnpm` 兜底，省去「先装 pnpm」这一步。
-- **打包自动化**：`package-release.ps1` 在 `dist` 缺失时自动先调用 `build.ps1`，实现「一条命令出包」。
-- **文档更新**：`README.md` 补齐运行时自检、一键安装、一条命令构建/发布等说明；`src/BUILD.md` 修正过时的 `desktop\` 路径。
-- **锁定依赖版本**：`build.ps1` 固定 `DshVersion = 0.1.0-rc.6`、`WebView2Version = 1.0.4129.50`、`node v24.14.0`，提升可复现性。
+- 将窗口关闭行为改为最小化到系统托盘并保持 DSH 运行。
+- 增加托盘“真正退出”菜单，显式退出时清理 DSH 进程树。
+- 单实例逻辑兼容隐藏窗口，托盘恢复随后改为单击触发。
 
-## [0.1.0] - 初始版本
+### [Imported upstream 0.2.0] - 2026-08-16
 
-- 首个可发布版本：基于 WinForms + WebView2 的桌面壳，封装官方 DeepSeek Harness（`@deepseek-ai/dsh`）。
-- 自包含发布包：内置 Node.js 运行时与 `node_modules`，用户无需安装 Node/pnpm。
-- 端口探测与异常残留接管清理；WebView2 E_ABORT 重试机制。
-- 构建脚本：`build.ps1`、`package-release.ps1`、GitHub Actions 自动构建发布。
+- 将同步启动等待改为 async/await，减少 UI 启动冻结。
+- 增加进程树清理、单实例保护、端口冲突提示、WebView2 缺失引导和错误日志。
+- 增加便携脚本、NSIS Setup、CI 构建/发布流程和固定 DSH/WebView2/Node 版本的早期实现。
 
----
+### [Imported upstream 0.1.0]
 
-## Roadmap（下个版本规划，待确认）
+- 初始 WinForms + WebView2 desktop shell。
+- 自包含 Node.js runtime 与 DSH `node_modules`。
+- 初始端口探测、服务启动、便携打包与 GitHub Actions。
 
-> 以下为候选方向，按「用户价值 / 工作量」粗略排序，**非承诺清单**。实施前请确认优先级与上游 `@deepseek-ai/dsh` 的能力边界。
-
-### 高优先（体验与可信度）
-- **代码签名 / SmartScreen 免警告**：当前 `Setup.exe` 与 `exe` 无签名，Windows 会报「未知发布者」。引入签名（需代码签名证书，可用免费 `signtool` + 自签/受信 CA）消除拦截，显著提升普通用户安装成功率。
-- **托盘常驻 + 最小化到托盘**：关闭窗口改为「最小化到系统托盘」而非直接停服务，点托盘图标恢复；避免误关后重等启动。可配套「真正退出」菜单项。 > **已在 v0.3.0 实现。**
-- **升级 dsh 到稳定版**：`build.ps1` 固定 `DshVersion = 0.1.0-rc.6`（RC）。核查上游是否已发布正式版并跟进，减少 RC 不稳定带来的偶发问题。
-
-### 中优先（自助与运维）
-- **自动更新（Self-update）**：发布后用户无需手动回 Releases。新增「检查更新」+ 一键下载安装包（或静默调用 Setup.exe 覆盖安装）。
-- **诊断面板**：把 `dsh-app-error.log` 做成可视化入口，支持「一键打开日志目录 / 导出」。
-- **API Key 安全存储**：如 dsh 支持从环境变量或配置文件读取 Key，由 shell 预填并从 Windows 凭据管理器安全读取，避免每次重配。
-
-### 低优先（扩展）
-- **ARM64 构建**：当前仅 `win-x64`，增加 `win-arm64` 产物（需 NSIS arm64 与 node arm64 支持）。
-- **卸载时彻底清理**：确保卸载流程杀净端口占用与残留进程。
-- **中文本地化收尾**：界面/提示全中文化核查（部分点已在 v0.2.0 完成）。
+导入后的 OrcaDSH 决策和阶段路线以 [DECISIONS.md](DECISIONS.md) 与 [ROADMAP.md](ROADMAP.md) 为准，不沿用 imported upstream roadmap。

@@ -578,7 +578,7 @@ namespace DeepSeekHarness
             catch { }
         }
 
-        // 递归杀掉整棵进程树（WMI 查子进程），确保关窗即停、无残留。
+        // 递归杀掉整棵进程树（WMI 查子进程），确保托盘“真正退出”后无残留；普通窗口 X 只隐藏到托盘。
         private void KillProcessTree(int pid)
         {
             try
