@@ -1,6 +1,6 @@
 # U0: DSH Upstream Delta Audit
 
-**Audit date:** 2026-08-23  
+**Audit date:** 2026-08-23
 **Scope:** Read-only comparison of Orca's shipped DSH runtime with a pinned upstream candidate. No production runtime, profile seed, plugin, build, installer, or release-policy file was changed.
 
 ## Exact Versions
@@ -228,4 +228,3 @@ Upgrading before R2 would add disproportionate risk: incompatible SQLite persist
 ## Cleanup
 
 At audit end, ports `3080`, `3331`, `3332`, `3341`, and `3445` were free. No `node.exe` process had a command line rooted in the temporary audit directory. The temporary audit directory remains for local cleanup; it contains upstream source and npm tarballs only, with no real credentials or sessions.
-
