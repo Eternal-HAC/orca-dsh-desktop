@@ -1,7 +1,7 @@
 # OrcaDSH Project Status
 
 状态：Canonical  
-更新时间：2026-08-20
+更新时间：2026-08-23
 
 ## 当前阶段
 
@@ -21,9 +21,10 @@ Public release remains `BLOCKED`。R1.1 `dsh-market` 与 R1.2 `dsh-context` isol
 
 ```text
 branch: main
-closure starting HEAD: ec49b353b45c599dc63ce260cc2924530b381f86
-closure starting origin/main: 37f4f59e57797c6739316f1e0ce13c7483b09818
-R0 closure baseline: this document's containing commit
+current reviewed HEAD: 6bfa619e4aa43f784fa2413c8759b785c03f9b42
+origin/main: 6bfa619e4aa43f784fa2413c8759b785c03f9b42
+historical R0 closure starting HEAD: ec49b353b45c599dc63ce260cc2924530b381f86
+historical R0 closure starting origin/main: 37f4f59e57797c6739316f1e0ce13c7483b09818
 ```
 
 `deep-research-report.md` 是未跟踪的研究输入，不是 canonical specification。
@@ -72,7 +73,7 @@ R0 closure baseline: this document's containing commit
 
 R0.4 build 已将当前有明确来源的 direct redistribution evidence 纳入 staging：`licenses/OrcaDSH-LICENSE.txt`、`Node-LICENSE.txt`、`WebView2-LICENSE.txt`、`WebView2-NOTICE.txt`，以及 app root 的 `THIRD_PARTY_NOTICES.md`。DSH LICENSE 继续位于 package tree。Development staging 与 ZIP 已验证 PASS，NSIS Setup 构建 PASS；installed tree 尚未在隔离 Windows 用户/机器实际验证。transitive npm dependency 审计仍未完成。
 
-R0.3 working tree 新增 repository-controlled `release-policy.json` 和共用 gate。`v*` tag 与手动 workflow 均在上传前执行同一个 approval check；当前 policy 默认为 blocked，原因是 Liang redistribution rights unresolved。该修改尚未 commit/push，因此远端 workflow 仍未获得保护。
+R0.3 已将 repository-controlled `release-policy.json` 和共用 gate 提交并推送至 `origin/main`（`6588b449c8fb960e8c49fea57e1169baecbdcc92`）。`v*` tag 与手动 workflow 均在上传前执行同一个 approval check；当前 `publicReleaseApproved=false`，原因是 Liang redistribution rights unresolved。现有 policy/workflow validation 已通过，但这不代表已执行或通过真实 public release 测试。
 
 Installer、exe、namespace、mutex、artifact path 和默认 `0.2.0` build/version 常量等仍保留 pre-Orca legacy identifier。为避免扩大本轮到 runtime/installer identity migration，R0.2 只记录这些 seam，没有机械重命名。
 
