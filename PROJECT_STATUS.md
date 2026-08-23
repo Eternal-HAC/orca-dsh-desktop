@@ -12,20 +12,20 @@ R0.2: Review complete
 R0.3: Review complete
 R0.4: Review complete
 R0: Complete
-Next phase: R1 Community Integration Spikes
+R1: Complete
+Next: R2 scope review and explicit approval
 ```
 
-Public release remains `BLOCKED`。R1.1 `dsh-market`、R1.2 `dsh-context` 与 R1.3 `@linxin666/dsh-pet` isolated integration spike 已完成，结论均为 `DEFER`；没有默认 bundle、optional bundle 或 Fork。
+Public release remains `BLOCKED`。R1.1 `dsh-market`、R1.2 `dsh-context` 与 R1.3 `@linxin666/dsh-pet` isolated integration spike 已完成，结论均为 `DEFER`；没有默认 bundle、optional bundle 或 Fork。R1 Complete 表示计划中的社区 integration candidates 已完成评估并记录产品决策，不表示任一社区插件获准进入 Orca distribution。
 
-## Git baseline
+## Reviewed milestones
 
 ```text
-branch: main
-current reviewed HEAD: 6bfa619e4aa43f784fa2413c8759b785c03f9b42
-origin/main: 6bfa619e4aa43f784fa2413c8759b785c03f9b42
-historical R0 closure starting HEAD: ec49b353b45c599dc63ce260cc2924530b381f86
-historical R0 closure starting origin/main: 37f4f59e57797c6739316f1e0ce13c7483b09818
+R0 release-gate/compliance baseline: 6588b449c8fb960e8c49fea57e1169baecbdcc92
+R1 reviewed milestone: bf9104c3a755685846f87aa50f5a9d4e61726e24
 ```
+
+Git is the source of truth for the live branch HEAD and remotes. This document records reviewed milestones rather than mutable branch pointers.
 
 `deep-research-report.md` 是未跟踪的研究输入，不是 canonical specification。
 
@@ -131,4 +131,4 @@ Open public-release 和 release-candidate-only 项不阻止 R1 isolated communit
 
 ## Next Approved Work
 
-R1.3 complete. **Next: R1 closure review.** R1.1、R1.2 与 R1.3 的 community integration spike 均为 `DEFER`，没有 approved default-bundle candidate。Any R2 scope requires a new reviewed decision;不得自行默认 bundle、修改 runtime/toolchain、installer、DSH core、tag 或 public release。
+R1 closure review is complete. **Next: review and explicitly approve the recommended R2 scope.** The R1.1/R1.2/R1.3 candidates are all `DEFER`; no community capability is approved for default distribution. Any R2 scope must preserve that result;不得自行默认 bundle、修改 runtime/toolchain、installer、DSH core、tag 或 public release。

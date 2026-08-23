@@ -132,3 +132,13 @@ REUSE / PIN / FORK / REJECT / DEFER
 ## R1.3 dsh-pet decision
 
 `@linxin666/dsh-pet@0.2.9`（GitHub `v0.2.9` tagged commit `117b0001b6c91d13245d0f239f0b7f33dadd95fa`）记录为 `DEFER`。其 declared DSH range 是 `>=0.1.1-rc.1`，当前 Orca `0.1.0-rc.6` 为 `OUTSIDE DECLARED RANGE`；普通 rc.6 Host/Client、内置 sprite、refresh、restart boot 和 display preference 的 PASS 是 exercised paths 的经验结果，不是上游 rc.6 支持承诺。该 package 不注册 `sessionProjections`，直接在 host memory 归约 SessionEvent，且会读取 session text/reasoning/tool payload 生成互动文案；它不能替代 Orca per-session ActivityAdapter。内置角色素材的再分发权没有独立可核验证据；独立的 rc.6 Settings namespace seam 也使其表单不可用。当前不 default bundle、不 optional bundle、不 Fork，也不开始 generic Orca Web Pet engine。未来 Orca Web Pet 如获批准，应以 Orca ActivityAdapter → small Orca-owned presentation renderer → Orca-owned licensed assets 为优先结构，而非 fork dsh-pet。详见 `research/R1_DSH_PET_SPIKE.md`。
+
+## R1 re-evaluation registry
+
+`DEFER` 不等于 `REJECT`。三个候选均保留精确版本和 spike evidence；只有全部对应 gate 满足并经新决策 review 后，才可重新评估。
+
+| Candidate | Re-evaluation gates |
+| --- | --- |
+| `dshmarket` | 可复现的稳定 release/source build；Orca-private pnpm strategy；社区 plugin trust/consent UX；direct/transitive licence audit；safe isolated WinForms/WebView2 E2E。 |
+| `dsh-context` | peer-compatible Orca DSH baseline；重新测量 dependency graph 与 profile overhead；Orca-owned migration design；direct/transitive licence audit；safe isolated WinForms/WebView2 E2E。 |
+| `@linxin666/dsh-pet` | Orca DSH 落入 declared range 或 upstream 明确支持；Settings seam resolved；角色/媒体具备独立 redistributable licence；真实 lifecycle/A-B/restart E2E；确认 upstream architecture 已能实质收窄为适合 Orca presentation 的边界。 |

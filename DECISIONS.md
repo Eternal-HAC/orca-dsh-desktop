@@ -158,3 +158,31 @@ Blocked pending evidence or replacement。
 
 **Consequences**  
 正式 release 必须停止；`THIRD_PARTY_NOTICES.md` 和构建默认项将在 R0.2/R0 legal hygiene 中处理。此结论不等同于认定侵权，也不否认可能存在仓库外授权。
+
+## 2026-08-23 — R1 社区候选不进入 Orca infrastructure
+
+**Decision:**
+`dshmarket`、`dsh-context` 和 `@linxin666/dsh-pet` 均保持 `DEFER`。三者均不 default bundle、不 optional bundle、不 Fork，也不作为 Orca infrastructure。Orca 不自研 generic Plugin Manager、Context Dashboard 或 generic Web Pet engine。
+
+**Reason:**
+三个 spike 都证明了社区生态的价值，也都暴露了当前 pinned DSH、profile distribution、licence/asset、trust、replay 或 host E2E 边界。没有一个候选同时达到 Orca default distribution 的 compatibility、offline、legal 和 zero-setup gate。
+
+**Status:**
+Accepted. `DEFER` is not `REJECT`; detailed re-evaluation gates are maintained in `BUILD_REUSE_POLICY.md`.
+
+**Consequences:**
+保留 MetricsAdapter、ActivityAdapter、Token Monitor MVP 和 thin Orca Compatibility Layer。未来 Orca Web Pet 如获单独批准，只能优先沿 `ActivityAdapter → small Orca-owned presentation renderer → Orca-owned licensed assets` 设计，而不采用 dsh-pet 作为基础设施。
+
+## 2026-08-23 — R2 保持为独立于社区候选的 Intensity contract review
+
+**Decision:**
+R2 先审查并定义 user-controlled `OrcaIntensityState v0`，不以任何 R1 community candidate 或 DSH upgrade 为前提；selected intensity 与 recommended intensity 保持分离，R2 不实现 routing 或自动应用。
+
+**Reason:**
+当前 rc.6 已有 reasoning effort interaction 与 Orca Metrics/Activity runtime evidence。先冻结不泄漏 Liang 0–30 的 presentation contract，可为合法 Orca renderer 和未来 DSH upgrade 建立最小输入边界，同时避免因 deferred community package 扩大 scope。
+
+**Status:**
+Proposed for R2 scope approval; not implemented.
+
+**Consequences:**
+R2 不安装社区插件、不升级 DSH、不改 installer/profile migration、不做 Pet renderer 或正式素材。R3 的任何 renderer 只能在 R2 contract 和素材授权通过后再提出。

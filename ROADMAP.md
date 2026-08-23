@@ -70,9 +70,11 @@ Identity migration 不阻塞 R0，本轮不实施。建议按以下顺序单独�
 
 ## R1 — Community Integration Spikes
 
+阶段状态：**COMPLETE**（2026-08-23）。三个计划候选均已完成隔离审计并记录为 `DEFER`。`DEFER` 保留重新评估入口，不代表 default/optional bundle、Fork 或 Orca support 获批。
+
 ### Goal
 
-用真实 host E2E 判断 Orca 是否能可靠承载选定社区能力，并形成 REUSE/PIN/FORK/REJECT 结论。
+用真实 host E2E 判断 Orca 是否能可靠承载选定社区能力，并形成 REUSE/PIN/FORK/REJECT/DEFER 结论。
 
 ### Scope
 
@@ -115,35 +117,38 @@ dsh-pet
 
 ### Goal
 
-定义最小 Orca presentation state，并明确 Metrics/Activity 的长期 thin adapter 边界。
+在固定 rc.6 baseline 上冻结最小、用户控制优先的 `OrcaIntensityState v0`，让未来合法的 Orca presentation 可以脱离 Liang 的 0–30 刻度而消费真实 DSH reasoning effort。R2 是 contract 和 compatibility scope，不是 Pet、Skin 或视觉资产实现阶段。
 
 ### Scope
 
-- 设计 `OrcaIntensityState v0`：`effortId`、`normalizedIntensity`、nullable preview、source。
-- 分离 selected 与 recommended intensity。
-- 审查 Metrics/Activity 是否可消费可靠官方/社区 projection。
-- 规定 multi-session 和 active-session selector。
+- 规定 `OrcaIntensityState v0`：`effortId`、`normalizedIntensity`、nullable `previewIntensity`、`source`。
+- 规定 selected intensity 与 recommended intensity 的分离；R2 不产生或自动应用 recommendation。
+- 验证 rc.6 当前模型的 `reasoning.efforts` 到原始 effort ID / normalized presentation value 的 adapter 边界与空值行为。
+- 明确 Intensity 的 session/active-session selector 与 Metrics/Activity 的独立性；保留 MetricsAdapter、ActivityAdapter 与 Token Monitor MVP 的现有 contract，不扩建 telemetry。
+- 写明由当前 pinned DSH 到未来升级的 compatibility smoke，而不是在本阶段升级 DSH。
 
 ### Out of Scope
 
-- Router、history、费用、动画 framework、Pet renderer、wallpaper engine 和 auto apply。
+- dsh-market、dsh-context、dsh-pet 或任何默认/optional community bundle。
+- Router、history、费用、动画 framework、Pet renderer、wallpaper engine、角色正式素材和 auto apply。
+- DSH upgrade、installer/profile migration 改造或 public release。
 
 ### Entry Criteria
 
-- Metrics / Activity 已有足够的官方、社区或 Orca runtime evidence，可支撑 thin-adapter review。
-- Intensity consumer 和 portability 要求明确。
+- Metrics / Activity 的 Orca runtime evidence 已足以维持现有 thin contracts；不把 deferred community plugin 作为 R2 dependency。
+- Intensity consumer、portability 与 user-control requirements 经 review 明确。
 
 ### Exit Criteria
 
-- Contract 小而稳定，未泄漏 Liang 0–30 刻度。
-- 普通 DSH plugin 可消费，不依赖 WinForms。
-- mapping、null、preview 和 source 语义有测试计划。
+- Contract 小而稳定，未泄漏 Liang 0–30 刻度，不含 routing/recommendation policy。
+- 普通 DSH plugin 可消费，不依赖 WinForms、dsh-market、dsh-context 或 dsh-pet。
+- mapping、null、preview、source、selected/recommended 分离和 DSH upgrade smoke 语义有测试计划。
 
 ### Artifacts
 
-- Intensity contract specification。
-- Metrics/Activity adapter decision update。
-- compatibility smoke additions。
+- Intensity contract specification and acceptance tests.
+- Metrics/Activity adapter boundary confirmation.
+- compatibility smoke additions and R3 renderer input contract.
 
 ## R3 — Orca Web Experience MVP
 
@@ -154,7 +159,7 @@ dsh-pet
 ### Scope
 
 - Orca visual identity、角色和专属交互。
-- 根据 R1 结果 REUSE 或受限 FORK Web Pet。
+- 用 Orca ActivityAdapter 驱动 small Orca-owned Web presentation renderer；不采用或 fork `dsh-pet` 作为 Orca infrastructure。
 - 兼容社区 Skin Center，不建立通用 skin framework。
 - Activity、Intensity 和必要 Metrics 驱动 Orca presentation。
 - 在标准 `dsh web` 与 Orca reference host 中验证。
@@ -167,7 +172,7 @@ dsh-pet
 
 - R2 contract 通过 review。
 - 所有 Orca 素材权利清晰。
-- 选定社区组件通过准入 gate。
+- 若引入任何额外社区组件，该精确组件通过准入 gate；R3 本身不依赖 R1 的三个 deferred candidate。
 
 ### Exit Criteria
 
