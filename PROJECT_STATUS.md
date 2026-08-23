@@ -15,7 +15,7 @@ R0: Complete
 Next phase: R1 Community Integration Spikes
 ```
 
-Public release remains `BLOCKED`。R1.1 `dsh-market` 与 R1.2 `dsh-context` isolated integration spike 已完成，结论均为 `DEFER`；未默认 bundle，未开始 `dsh-pet` 或其他功能实现。
+Public release remains `BLOCKED`。R1.1 `dsh-market`、R1.2 `dsh-context` 与 R1.3 `@linxin666/dsh-pet` isolated integration spike 已完成，结论均为 `DEFER`；没有默认 bundle、optional bundle 或 Fork。
 
 ## Git baseline
 
@@ -100,9 +100,18 @@ Installer、exe、namespace、mutex、artifact path 和默认 `0.2.0` build/vers
 - 隐私 seam：完整 prompt/reasoning/tool/system 内容只走本地 projection；未发现 telemetry/session upload。插件信息卡每小时最多访问一次 npm registry 查询最新版，不发送 session 内容。
 - 决策：`DEFER`；不 default bundle、不 optional bundle、不 Fork；同时停止自研通用 Orca Context Dashboard。完整证据见 `research/R1_DSH_CONTEXT_SPIKE.md`。
 
+## R1.3 spike result
+
+- 精确基线：`@linxin666/dsh-pet@0.2.9`，GitHub `v0.2.9` tagged commit `117b0001b6c91d13245d0f239f0b7f33dadd95fa`。
+- DSH version-range seam：upstream declared `dsh.engines.dsh = >=0.1.1-rc.1`，而 Orca 为 `0.1.0-rc.6`，故为 `OUTSIDE DECLARED RANGE`。普通 rc.6 Host/Client、loopback asset route、内置 WebP sprite、display toggle、position/size persistence、refresh 和 host restart boot 的 PASS 仅覆盖 exercised paths 的经验兼容，不代表 upstream supports rc.6。Test host state reset idle on restart by design.
+- 架构 seam：没有 `sessionProjections`；插件直接监听 `session/event`，在 host memory 维护 per-session bubbles 和 global visible state。它会重复 Orca ActivityAdapter 的 reducer，不能作为 Orca Activity source。
+- Settings/client seam：宠物设置表单报告配置 namespace 未暴露，标记为 compatibility shim required；它独立于 DSH version-range mismatch。
+- 资产/隐私 seam：direct code Apache-2.0 evidence exists, but character sprites/previews lack independently auditable redistribution evidence; package also reads session text/reasoning/tool payload for whisper/interaction presentation. No normal-path telemetry or remote asset fetch was found.
+- 决策：`DEFER`；不 default bundle、不 optional bundle、不 Fork、不 build Orca generic Web Pet engine。完整证据见 `research/R1_DSH_PET_SPIKE.md`。
+
 ## 未验证
 
-- `dsh-pet` 与 Orca rc.6 的真实兼容性。
+- `@linxin666/dsh-pet` 的真实 provider reasoning/tool/completed/aborted/error lifecycle、Session A/B、event replay，以及 safely isolated WinForms/WebView2 E2E；当前 package 不提供 DSH projection replay。
 - `dsh-context` 的 safely isolated WinForms/WebView2 E2E、真实 compaction/prune、长期会话性能、稳定 peer range 和 transitive license。
 - `dshmarket` 的 WinForms/WebView2 reference-host 隔离 E2E、Orca-private pnpm 方案、transitive license 和后续稳定 release。
 - WinForms/Setup 重启或重装后 credentials、sessions 和配置仍可读取的逐项隔离 smoke；当前只有隔离 DSH host restart 与卸载后真实 DSH_HOME 目录保留证据。
@@ -122,4 +131,4 @@ Open public-release 和 release-candidate-only 项不阻止 R1 isolated communit
 
 ## Next Approved Work
 
-R0 已关闭。R1.1 与 R1.2 已完成并停止。Next Approved Work：**R1.3 `dsh-pet` isolated integration spike**。本轮不启动 R1.3；不得自行默认 bundle、修改 runtime/toolchain、installer、DSH core、tag 或 public release。
+R1.3 complete. **Next: R1 closure review.** R1.1、R1.2 与 R1.3 的 community integration spike 均为 `DEFER`，没有 approved default-bundle candidate。Any R2 scope requires a new reviewed decision;不得自行默认 bundle、修改 runtime/toolchain、installer、DSH core、tag 或 public release。

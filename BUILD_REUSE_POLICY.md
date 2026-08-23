@@ -45,7 +45,7 @@ Orca 自行拥有与其发行、兼容质量或专属体验直接相关的能力
 | Context Monitor | DEFER | R1.2 已验证 `dsh-context@0.19.1` 的普通 rc.6 Context UI、projection、语义与回放，但其项目过新、硬 peer 指向 rc.8，且标准安装会重整并显著扩大 profile 依赖图。当前不 bundle，也不写 Orca Context Dashboard。 |
 | Metrics Adapter | ADAPT | 保留 snapshot contract，未来缩薄 event parsing。 |
 | Activity Adapter | ADAPT | 保留稳定 enum，mapping 可改为官方/社区 projection。 |
-| Web Pet | REUSE / FORK | R1 优先评估 `dsh-pet`；只有 Orca renderer 差异明确时才受限 Fork。 |
+| Web Pet | DEFER | R1.3 评估 `@linxin666/dsh-pet@0.2.9`：其声明 DSH `>=0.1.1-rc.1`，Orca rc.6 属于范围外；普通 rc.6 boot/显示仅为 exercised-path empirical PASS。它无 per-session replay projection、直接读取正文/reasoning/tool payload、另有独立的 rc.6 Settings namespace seam，且角色素材授权未证明。当前不 default/optional bundle、不 Fork；也不自研 generic Web Pet engine。 |
 | Desktop Pet | SKIP | Web Pet 和 state contract 尚未稳定；不引入 native overlay 复杂度。 |
 | Skin | REUSE | 优先兼容社区 Skin Center；不建第二套 skin system。 |
 | Theme | REUSE | 使用 DSH/社区 theme 能力，Orca 只拥有视觉设计和配置。 |
@@ -128,3 +128,7 @@ REUSE / PIN / FORK / REJECT / DEFER
 ## R1.2 dsh-context decision
 
 `dsh-context@0.19.1`（commit `aa768c76a1d875a413c13a213262c74f0187930f`）记录为 `DEFER`。直接 package 的 Apache-2.0、普通 DSH rc.6 Host/Client、Context 语义、provider 对照、会话隔离和 projection 回放已验证；当前不进入 default/optional bundle，也不另建 Orca Context Dashboard。只有当 Orca 升级到晚于 rc.6 或与上游 peer 兼容的 DSH、按新基线重新测量 dependency graph、rc.8 peer duplication/profile expansion 不再造成不可接受的分发成本、可安全执行隔离 WinForms/WebView2 E2E，且 direct/transitive license 审计仍可接受时，才重新评估。详见 `research/R1_DSH_CONTEXT_SPIKE.md`。
+
+## R1.3 dsh-pet decision
+
+`@linxin666/dsh-pet@0.2.9`（GitHub `v0.2.9` tagged commit `117b0001b6c91d13245d0f239f0b7f33dadd95fa`）记录为 `DEFER`。其 declared DSH range 是 `>=0.1.1-rc.1`，当前 Orca `0.1.0-rc.6` 为 `OUTSIDE DECLARED RANGE`；普通 rc.6 Host/Client、内置 sprite、refresh、restart boot 和 display preference 的 PASS 是 exercised paths 的经验结果，不是上游 rc.6 支持承诺。该 package 不注册 `sessionProjections`，直接在 host memory 归约 SessionEvent，且会读取 session text/reasoning/tool payload 生成互动文案；它不能替代 Orca per-session ActivityAdapter。内置角色素材的再分发权没有独立可核验证据；独立的 rc.6 Settings namespace seam 也使其表单不可用。当前不 default bundle、不 optional bundle、不 Fork，也不开始 generic Orca Web Pet engine。未来 Orca Web Pet 如获批准，应以 Orca ActivityAdapter → small Orca-owned presentation renderer → Orca-owned licensed assets 为优先结构，而非 fork dsh-pet。详见 `research/R1_DSH_PET_SPIKE.md`。

@@ -34,7 +34,7 @@ Orca-owned plugin packages are copied into the profile seed at build time。最�
 | `dsh-client-liang-intensity-skin` | `0.1.4` release tarball | Yes, current baseline | rc.6 WebView coexistence and effort interaction PASS | Redistribution evidence incomplete; formal release BLOCKED |
 | `dshmarket` | `1.16.0` / `fa5200829cbcc2a0cb4b5e0d2199f74a26f928fc` spike baseline | No | Ordinary rc.6 `dsh web`, Market UI and isolated fixture lifecycle PASS; Orca bundled-runtime-only package operations FAIL because private npm/corepack/pnpm is absent | R1.1 decision `DEFER`; direct package MIT evidence reviewed, transitive audit incomplete |
 | `dsh-context` | `0.19.1` / `aa768c76a1d875a413c13a213262c74f0187930f` spike baseline | No | Ordinary rc.6 `dsh web` Host/Client, Context projections, two-turn/provider/tool/abort lifecycle, A/B, refresh and host restart PASS; WinForms reference host NOT TESTABLE SAFELY | R1.2 decision `DEFER`; direct Apache-2.0 evidence reviewed, hard rc.8 peer and transitive audit remain open |
-| `dsh-pet` | Not selected | No | Not tested | R1 candidate; asset license must be audited |
+| `@linxin666/dsh-pet` | `0.2.9` / `117b0001b6c91d13245d0f239f0b7f33dadd95fa` spike baseline | No | `OUTSIDE DECLARED RANGE`: upstream requires DSH `>=0.1.1-rc.1`, Orca is `0.1.0-rc.6`. Ordinary rc.6 boot/asset/overlay/refresh/preference smoke PASS only empirically on exercised paths; provider A-B and WinForms host NOT TESTED SAFELY; Settings form incompatible on rc.6 | R1.3 decision `DEFER`; direct code Apache-2.0 evidence reviewed, character assets BLOCKED/unresolved and transitive audit incomplete |
 
 未测试项目不得描述为兼容、默认 bundle 或 Orca 官方支持。
 
@@ -52,6 +52,15 @@ R1.2 的详细证据见 `research/R1_DSH_CONTEXT_SPIKE.md`：
 - Formal Orca bundle：`NOT APPROVED`；default bundle 与 optional bundle 均为 No。
 
 标准 add 重整了 profile 的 pnpm graph，并把文件数从 48 增至 1,047；该结果不构成默认 bundle 或长期 rc.6 支持承诺。
+
+R1.3 的详细证据见 `research/R1_DSH_PET_SPIKE.md`：
+
+- DSH version-range seam：upstream `dsh.engines.dsh = >=0.1.1-rc.1`，Orca `0.1.0-rc.6`，结果为 `OUTSIDE DECLARED RANGE`。上游 development baseline 的 Session/Settings/Client devDependencies 也主要为 `^0.1.1-rc.2`。
+- Ordinary `dsh web` + Orca rc.6 baseline：overlay、same-origin asset route、refresh、temporary preference persistence and host restart boot `PASS`，但仅为 exercised paths 的 empirical compatibility；不代表 upstream officially supports Orca rc.6。
+- `sessionProjections`：`N/A`，dsh-pet directly reduces `session/event` into host-memory/global visible state; it is not replay-safe and must not replace Orca ActivityAdapter.
+- Settings/client seam：`COMPATIBILITY SHIM REQUIRED`，tested rc.6 Settings UI did not expose the package namespace required for its form. This is independent of the DSH version-range mismatch.
+- Real reasoning/tool/completed/aborted/error lifecycle and A/B switching：`NOT TESTED` without a safe provider fixture; WinForms + WebView2 reference host：`NOT TESTABLE SAFELY`。
+- Formal Orca bundle：`NOT APPROVED`；default bundle 与 optional bundle 均为 No. Code evidence is Apache-2.0, but built-in character asset redistribution evidence is unresolved.
 
 ## Profile seed and migration
 
