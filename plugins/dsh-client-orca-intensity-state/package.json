@@ -1,0 +1,34 @@
+{
+  "name": "dsh-client-orca-intensity-state",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Orca-owned client-side derived reasoning effort state for DeepSeek Harness.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "package.json",
+    "cordis.patch.yml",
+    "src",
+    "lib"
+  ],
+  "scripts": {
+    "test": "node ./test/intensity-state-smoke.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-model-selection"
+      ]
+    }
+  }
+}

@@ -65,6 +65,7 @@ $expectedPackages = [ordered]@{
     "dsh-client-liang-intensity-skin" = "0.1.4"
     "orcadsh-state-adapters" = "0.1.0"
     "dsh-client-orca-token-monitor" = "0.1.0"
+    "dsh-client-orca-intensity-state" = "0.1.0"
 }
 
 foreach ($packageId in $expectedPackages.Keys) {
@@ -80,6 +81,7 @@ foreach ($packageId in $expectedPackages.Keys) {
 
 Assert-True (Test-Path -LiteralPath (Join-Path $profileRoot "node_modules\dsh-client-orca-token-monitor\lib\client.js") -PathType Leaf) "Token Monitor client entry missing."
 Assert-True (Test-Path -LiteralPath (Join-Path $profileRoot "node_modules\orcadsh-state-adapters\src\plugin.js") -PathType Leaf) "State adapter host entry missing."
+Assert-True (Test-Path -LiteralPath (Join-Path $profileRoot "node_modules\dsh-client-orca-intensity-state\lib\client.js") -PathType Leaf) "Intensity State client entry missing."
 
 $unsafeFiles = Get-ChildItem -LiteralPath (Join-Path $ArtifactRoot "profile-seed") -Recurse -Force -ErrorAction Stop | Where-Object {
     $outsideNodeModules = $_.FullName -notmatch "[\\/]node_modules[\\/]"

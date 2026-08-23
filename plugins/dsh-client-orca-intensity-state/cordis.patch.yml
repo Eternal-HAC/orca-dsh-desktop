@@ -1,0 +1,3 @@
+- insert:
+    - id: orca-intensity-state
+      name: dsh-client-orca-intensity-state

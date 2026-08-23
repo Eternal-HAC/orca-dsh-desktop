@@ -363,6 +363,7 @@ namespace DeepSeekHarness
 
             MigrateBundledWebPlugin(targetProfile, "orcadsh-state-adapters");
             MigrateBundledWebPlugin(targetProfile, "dsh-client-orca-token-monitor");
+            MigrateBundledWebPlugin(targetProfile, "dsh-client-orca-intensity-state");
         }
 
         private void MigrateBundledWebPlugin(string targetProfile, string packageId)

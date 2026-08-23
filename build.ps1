@@ -18,6 +18,8 @@ $stateAdaptersPackageId = "orcadsh-state-adapters"
 $stateAdaptersSource = Join-Path $root "plugins\$stateAdaptersPackageId"
 $tokenMonitorPackageId = "dsh-client-orca-token-monitor"
 $tokenMonitorSource = Join-Path $root "plugins\$tokenMonitorPackageId"
+$intensityStatePackageId = "dsh-client-orca-intensity-state"
+$intensityStateSource = Join-Path $root "plugins\$intensityStatePackageId"
 New-Item -ItemType Directory -Force -Path $dist, $lib, $buildDir | Out-Null
 
 # ---------- 1. node.exe ----------
@@ -155,7 +157,7 @@ finally {
 
 $seedPackageJson = Join-Path $seedBuildHome "profiles\web\package.json"
 $seedSkinDir = Join-Path $seedBuildHome "profiles\web\node_modules\$skinPackageId"
-if (-not (Test-Path $seedPackageJson) -or -not (Test-Path $seedSkinDir) -or -not (Test-Path $stateAdaptersSource) -or -not (Test-Path $tokenMonitorSource)) {
+if (-not (Test-Path $seedPackageJson) -or -not (Test-Path $seedSkinDir) -or -not (Test-Path $stateAdaptersSource) -or -not (Test-Path $tokenMonitorSource) -or -not (Test-Path $intensityStateSource)) {
   throw "默认 skin profile seed 不完整"
 }
 $seedPackage = Get-Content -LiteralPath $seedPackageJson -Raw | ConvertFrom-Json
@@ -181,6 +183,14 @@ foreach ($runtimeItem in @("package.json", "cordis.patch.yml", "src", "lib")) {
 }
 if ($tokenMonitorPackageId -notin @($seedPackage.dsh.profile.bundles)) {
     $seedPackage.dsh.profile.bundles += $tokenMonitorPackageId
+}
+$seedIntensityStateDir = Join-Path $seedBuildHome "profiles\web\node_modules\$intensityStatePackageId"
+New-Item -ItemType Directory -Force -Path $seedIntensityStateDir | Out-Null
+foreach ($runtimeItem in @("package.json", "cordis.patch.yml", "src", "lib")) {
+    Copy-Item -LiteralPath (Join-Path $intensityStateSource $runtimeItem) -Destination $seedIntensityStateDir -Recurse -Force
+}
+if ($intensityStatePackageId -notin @($seedPackage.dsh.profile.bundles)) {
+    $seedPackage.dsh.profile.bundles += $intensityStatePackageId
 }
 $seedPackage | ConvertTo-Json -Depth 12 | Set-Content -Encoding utf8 -Path $seedPackageJson
 # The profile loader consumes package.json, bundle patches, and staged modules;
