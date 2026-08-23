@@ -1,7 +1,7 @@
 # OrcaDSH Compatibility Baseline
 
 状态：Canonical, human-maintained  
-更新时间：2026-08-20
+更新时间：2026-08-23
 
 本文件记录已经验证的精确组合和升级 seam。它不是对所有 DSH 或社区插件的兼容承诺。当前字段仍在 R0 阶段，不创建 `compatibility.yaml`。
 
@@ -24,6 +24,7 @@
 | --- | --- | --- | --- | --- |
 | `orcadsh-state-adapters` | `0.1.0` | Host Metrics/Activity projections | Profile seed bundle | rc.6 spike and runtime E2E PASS |
 | `dsh-client-orca-token-monitor` | `0.1.0` | Web current-session Monitor | Profile seed bundle | Real WebView E2E PASS |
+| `dsh-client-orca-intensity-state` | `0.1.0` | Client-side `OrcaIntensityStateV0` mapper / active-session selector | Profile seed bundle | rc.6 mapper tests and ordinary `dsh web` bundle/load smoke PASS; `0.1.1-rc.2` catalog fixture static PASS only |
 
 Orca-owned plugin packages are copied into the profile seed at build time。最终用户首次启动不运行 npm、pnpm 或 git。
 
@@ -68,12 +69,12 @@ R1.3 的详细证据见 `research/R1_DSH_PET_SPIKE.md`：
 
 - Setup 携带构建期生成的 `profile-seed`。
 - 当 `%LOCALAPPDATA%\OrcaDSH\profiles\web` 不存在时复制干净 seed。
-- Seed 包含 DSH base/web bundles、当前 Liang、Orca state adapters 和 Token Monitor。
+- Seed 包含 DSH base/web bundles、当前 Liang、Orca state adapters、Token Monitor 和 Intensity State mapper。
 
 ### Existing profile
 
-- P0.9.1 增量更新 `orcadsh-state-adapters` 和 `dsh-client-orca-token-monitor`。
-- 只覆盖这两个 Orca-owned package 目录。
+- P0.9.1/R2.2 增量更新 `orcadsh-state-adapters`、`dsh-client-orca-token-monitor` 和 `dsh-client-orca-intensity-state`。
+- 只覆盖这些 Orca-owned package 目录。
 - 只在 `dsh.profile.bundles` 中追加缺失的 Orca bundle。
 - 不覆盖 credentials、sessions、其他 bundles、其他插件或用户配置。
 
@@ -103,6 +104,9 @@ R1.3 的详细证据见 `research/R1_DSH_PET_SPIKE.md`：
 | Session A/B selects per-session projections | PASS in isolated DSH_HOME runtime |
 | Standard web-client refresh restores projection-backed Monitor | PASS in isolated `dsh web`; WinForms WebView2-specific refresh not rerun |
 | Same isolated DSH_HOME survives DSH host restart | PASS; session, metrics and activity remained readable |
+| OrcaIntensity mapper contract / lifecycle | PASS in Node VM; catalog mapping, all availability states, selected/default separation, opaque IDs, duplicate/empty metadata, A/B isolation and dispose |
+| OrcaIntensity ordinary rc.6 `dsh web` bundle/load | PASS; isolated profile manifest and served client entry |
+| OrcaIntensity `0.1.1-rc.2` catalog portability | PASS (static fixture only); target runtime NOT TESTED |
 | Full WinForms/Setup restart or reinstall retains credentials, sessions and configuration | NOT TESTABLE without touching real `%LOCALAPPDATA%\OrcaDSH` or adding a test seam |
 | Uninstall removes app and preserves DSH_HOME | PASS |
 
@@ -140,6 +144,15 @@ conversation.input.left
 ```
 
 升级时必须验证 slot 名称、session scope、`slots.inject()` / `slots.register()` 参数、inject 接收的 sessionId，以及 client package 的 `./client` export 和 module loader factory contract。
+
+### Intensity client directory contract
+
+```text
+ctx.sessions.list.current
+ctx.modelDirectories.directoryFor(sessionId).store
+```
+
+`dsh-client-orca-intensity-state` derives per-ordinary-session state from this client-side contract. rc.6 mapper and ordinary `dsh web` bundle/load evidence are PASS. The reviewed `0.1.1-rc.2` catalog fixture only proves ordinal mapping portability; target runtime, module loading and WebView behavior remain NOT TESTED until a dedicated DSH upgrade spike.
 
 ### SessionEvent and usage
 

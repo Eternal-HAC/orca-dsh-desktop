@@ -115,6 +115,8 @@ dsh-pet
 
 ## R2 — Thin State Contract
 
+**Status: COMPLETE**
+
 ### Goal
 
 在固定 rc.6 baseline 上冻结最小、用户控制优先的 `OrcaIntensityState v0`，让未来合法的 Orca presentation 可以脱离 Liang 的 0–30 刻度而消费真实 DSH reasoning effort。R2 是 contract 和 compatibility scope，不是 Pet、Skin 或视觉资产实现阶段。
@@ -151,6 +153,8 @@ dsh-pet
 - Metrics/Activity adapter boundary confirmation.
 - compatibility smoke additions and R3 renderer input contract.
 
+R3 may consume `DshActivitySnapshot` and `OrcaIntensityStateV0` as required inputs. `DshMetricsSnapshot` is optional and only enters a presentation when that surface has a reviewed need for it.
+
 ## R3 — Orca Web Experience MVP
 
 ### Goal
@@ -162,7 +166,8 @@ dsh-pet
 - Orca visual identity、角色和专属交互。
 - 用 Orca ActivityAdapter 驱动 small Orca-owned Web presentation renderer；不采用或 fork `dsh-pet` 作为 Orca infrastructure。
 - 兼容社区 Skin Center，不建立通用 skin framework。
-- Activity、Intensity 和必要 Metrics 驱动 Orca presentation。
+- Activity 与 Intensity 驱动 Orca presentation；Metrics 仅在具体 presentation 有经 review 的必要性时引入。
+- 首版 presentation renderer 只读；effort write/control、drag preview、recommendation 与 auto-apply 是独立 reviewed subphase，不随 R3 renderer MVP 自动进入。
 - 在标准 `dsh web` 与 Orca reference host 中验证。
 
 ### Out of Scope

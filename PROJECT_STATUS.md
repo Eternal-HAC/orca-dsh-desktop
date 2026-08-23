@@ -13,7 +13,10 @@ R0.3: Review complete
 R0.4: Review complete
 R0: Complete
 R1: Complete
-Next: R2 scope review and explicit approval
+R2.1: Complete
+R2.2: Complete
+R2: Complete
+Next: R3 scope review / R3.1 presentation design
 ```
 
 Public release remains `BLOCKED`。R1.1 `dsh-market`、R1.2 `dsh-context` 与 R1.3 `@linxin666/dsh-pet` isolated integration spike 已完成，结论均为 `DEFER`；没有默认 bundle、optional bundle 或 Fork。R1 Complete 表示计划中的社区 integration candidates 已完成评估并记录产品决策，不表示任一社区插件获准进入 Orca distribution。
@@ -23,6 +26,7 @@ Public release remains `BLOCKED`。R1.1 `dsh-market`、R1.2 `dsh-context` 与 R1
 ```text
 R0 release-gate/compliance baseline: 6588b449c8fb960e8c49fea57e1169baecbdcc92
 R1 reviewed milestone: bf9104c3a755685846f87aa50f5a9d4e61726e24
+R2 implementation milestone: 560eecde7702bb8a0423c2f3de24b1594286e354
 ```
 
 Git is the source of truth for the live branch HEAD and remotes. This document records reviewed milestones rather than mutable branch pointers.
@@ -40,6 +44,7 @@ Git is the source of truth for the live branch HEAD and remotes. This document r
 - Liang Intensity Skin `0.1.4` 当前默认 seed 集成。
 - `orcadsh-state-adapters` Metrics / Activity projections。
 - `dsh-client-orca-token-monitor` 当前 session MVP。
+- `dsh-client-orca-intensity-state@0.1.0`：`OrcaIntensityStateV0` client-side pure mapper 与 active-session selector。
 - existing-profile Orca-owned bundle incremental migration。
 
 ## 已验证
@@ -62,6 +67,10 @@ Git is the source of truth for the live branch HEAD and remotes. This document r
 | Session A/B projection switching | PASS | 隔离 DSH_HOME runtime；A 的 metrics/Failed 与 B 的空值/Idle 双向切换。 |
 | Web client refresh projection restore | PASS | 隔离 `dsh web` 客户端刷新后恢复 A/B 对应 projection；未宣称为 WinForms WebView2 专项 E2E。 |
 | Isolated DSH host restart retention | PASS | 同一隔离 DSH_HOME 重启 host 后，session、metrics、activity 可重新读取。 |
+| OrcaIntensity pure mapper | PASS | rc.6 catalog、null/stale/unknown、selected/default separation、unknown IDs、duplicate IDs 与 empty effort metadata 单测。 |
+| OrcaIntensity active-session lifecycle | PASS | A/B 切换、inactive-session isolation、同 session listener 不累积与 idempotent dispose。 |
+| OrcaIntensity rc.6 bundle/load smoke | PASS | 隔离 ordinary `dsh web`；manifest 与 served client entry 可读取。 |
+| OrcaIntensity target catalog portability | PASS (static) | `0.1.1-rc.2` 的 `off/low/high/max` fixture；不代表 target runtime compatibility。 |
 
 ## 当前 release blockers
 
@@ -115,7 +124,8 @@ Installer、exe、namespace、mutex、artifact path 和默认 `0.2.0` build/vers
 - `dsh-context` 的 safely isolated WinForms/WebView2 E2E、真实 compaction/prune、长期会话性能、稳定 peer range 和 transitive license。
 - `dshmarket` 的 WinForms/WebView2 reference-host 隔离 E2E、Orca-private pnpm 方案、transitive license 和后续稳定 release。
 - WinForms/Setup 重启或重装后 credentials、sessions 和配置仍可读取的逐项隔离 smoke；当前只有隔离 DSH host restart 与卸载后真实 DSH_HOME 目录保留证据。
-- OrcaIntensityState 的 contract 和 portability。
+- `0.1.1-rc.2` 的真实 runtime / WebView compatibility；当前只有 static catalog portability fixture。
+- OrcaIntensity 的 WinForms visual renderer E2E；R2 没有实现 renderer。
 - 未来 DSH 版本升级。
 - Liang 是否存在仓库外授权。
 - 研究报告中的动态 stars、plugin 数量和其他时间敏感生态数据。
@@ -131,4 +141,4 @@ Open public-release 和 release-candidate-only 项不阻止 R1 isolated communit
 
 ## Next Approved Work
 
-R1 closure review is complete. **Next: review and explicitly approve the recommended R2 scope.** The R1.1/R1.2/R1.3 candidates are all `DEFER`; no community capability is approved for default distribution. Any R2 scope must preserve that result;不得自行默认 bundle、修改 runtime/toolchain、installer、DSH core、tag 或 public release。
+**Next: R3 scope review / R3.1 presentation design.** R3 may consume the reviewed Orca state boundary, but no renderer implementation is approved by this status update. The R1.1/R1.2/R1.3 candidates remain `DEFER`; no community capability is approved for default distribution. Public release remains `BLOCKED`.

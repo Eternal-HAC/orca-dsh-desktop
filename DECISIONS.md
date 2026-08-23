@@ -106,13 +106,13 @@ Activity 是 Orca facade，不是 universal agent runtime；第三方插件不�
 ## 2026-08-20 — IntensityState 独立于 Liang
 
 **Decision**  
-未来 Orca Intensity 使用当前 adapter-provided ordered effort array 的 `normalizedPosition`（`index / (count - 1)`，单档为 `0`），并保留原始 `effortId`；该 position 不表示语义 reasoning strength，Liang 0–30 不是核心 contract。
+Orca Intensity 使用当前 adapter-provided ordered effort array 的 `normalizedPosition`（`index / (count - 1)`，单档为 `0`），并保留原始 `effortId`；该 position 不表示语义 reasoning strength，Liang 0–30 不是核心 contract。
 
 **Reason**  
 0–30 是特定皮肤的视觉隐喻。R2.1 rc.6 审计进一步确认 upstream 只承诺 adapter-preferred display order，未提供 numeric intensity、推荐值或视觉刻度。
 
 **Status**  
-Accepted as architecture；尚未实现。
+Accepted and implemented in R2.2 as a client-side pure mapper/selector.
 
 **Consequences**  
 任何 Liang 兼容逻辑都位于 adapter 或 renderer 边界，不能泄漏为 Orca 公共状态刻度。
@@ -182,7 +182,7 @@ R2 先审查并定义 user-controlled `OrcaIntensityState v0`，不以任何 R1 
 当前 rc.6 已有 reasoning effort interaction 与 Orca Metrics/Activity runtime evidence。R2.1 确认 selected effort 来自 Host ModelSelection，available efforts/default 来自当前 ModelDirectory model metadata；先冻结不泄漏 Liang 0–30 的 presentation contract，可为合法 Orca renderer 和未来 DSH upgrade 建立最小输入边界，同时避免因 deferred community package 扩大 scope。
 
 **Status:**
-R2.1 contract reviewed; implementation remains unapproved.
+R2.1 contract reviewed; R2.2 implementation completed and reviewed.
 
 **Consequences:**
-v0 不包含 preview、source 或 recommendation 字段；preview 是 renderer-local transient state，recommendation 是未来独立状态/policy。R2 不安装社区插件、不升级 DSH、不改 installer/profile migration、不做 Pet renderer 或正式素材。R3 的任何 renderer 只能在 R2 contract 和素材授权通过后再提出。
+v0 不包含 preview、source 或 recommendation 字段；preview 是 renderer-local transient state，recommendation 是未来独立状态/policy。R2 不安装社区插件、不升级 DSH、不改 installer，也不重构 profile migration；R2.2 仅沿用既有机制加入 Orca-owned bundle migration 条目。R2 不做 Pet renderer 或正式素材。R3 的任何 renderer 只能在 R2 contract 和素材授权通过后再提出。
