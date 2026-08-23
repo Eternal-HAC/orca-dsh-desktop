@@ -121,9 +121,10 @@ dsh-pet
 
 ### Scope
 
-- 规定 `OrcaIntensityState v0`：`effortId`、`normalizedIntensity`、nullable `previewIntensity`、`source`。
-- 规定 selected intensity 与 recommended intensity 的分离；R2 不产生或自动应用 recommendation。
-- 验证 rc.6 当前模型的 `reasoning.efforts` 到原始 effort ID / normalized presentation value 的 adapter 边界与空值行为。
+- 规定 `OrcaIntensityState v0`：availability、session/model identity、current-model `availableEfforts`、exact selected raw effort ID、adapter-provided `defaultEffortId` 与 ordinal `normalizedPosition`。
+- `normalizedPosition = index / (count - 1)`，单档为 `0`；它仅表示 adapter-provided display order，不表示语义 reasoning strength。
+- 规定 selected 与 future recommended 的分离；R2 不产生、持久化或自动应用 recommendation，且 v0 不包含 recommendation 字段。
+- 验证 rc.6 当前模型的 `reasoning.efforts` 到原始 effort ID / ordinal presentation position 的 adapter 边界与空值行为。
 - 明确 Intensity 的 session/active-session selector 与 Metrics/Activity 的独立性；保留 MetricsAdapter、ActivityAdapter 与 Token Monitor MVP 的现有 contract，不扩建 telemetry。
 - 写明由当前 pinned DSH 到未来升级的 compatibility smoke，而不是在本阶段升级 DSH。
 
@@ -142,7 +143,7 @@ dsh-pet
 
 - Contract 小而稳定，未泄漏 Liang 0–30 刻度，不含 routing/recommendation policy。
 - 普通 DSH plugin 可消费，不依赖 WinForms、dsh-market、dsh-context 或 dsh-pet。
-- mapping、null、preview、source、selected/recommended 分离和 DSH upgrade smoke 语义有测试计划。
+- mapping、null、stale、selected/default 区分、selected/recommended 分离和 DSH upgrade smoke 语义有测试计划；preview 保持 renderer-local，source 不属于 v0。
 
 ### Artifacts
 

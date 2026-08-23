@@ -80,19 +80,22 @@ Orca 固定并原样运行经过验证的 DSH 版本，不 fork、不 patch DSH 
 
 当前 `dsh-client-orca-token-monitor` 位于产品层。它读取当前 session 的 `orcaDshMetrics` 和 `orcaDshActivity` projection，不重新解析 SessionEvent。
 
-未来 Intensity contract 只表达 presentation state：
+R2.1 reviewed Intensity contract 只表达 ordered presentation position，且按普通 session 派生：
 
 ```text
-OrcaIntensityState
+OrcaIntensityStateV0
 {
-    effortId
-    normalizedIntensity // 0.0 .. 1.0
-    previewIntensity?   // nullable
-    source
+    availability
+    sessionId
+    providerId
+    modelId
+    availableEfforts[] // raw effortId, display metadata, normalizedPosition
+    selected           // exact Host ModelSelection.reasoningEffort only
+    defaultEffortId    // exact model metadata, not a user selection
 }
 ```
 
-Liang 的 0–30 视觉刻度不是 Orca 核心 abstraction。Intensity 也不等于 Auto Routing；selected 与 recommended 必须独立。
+`normalizedPosition` 是当前 adapter-provided effort order 中的 `index / (count - 1)`，单档为 `0`；它不表示 reasoning power 百分比。Liang 的 0–30 视觉刻度不是 Orca 核心 abstraction。preview 是 renderer-local transient state，source 不属于 v0；R2 不产生 recommendation。selected 与 future recommended 仍必须独立，且 recommendation 不得隐式覆盖用户 effort。
 
 ## Reference Host
 
