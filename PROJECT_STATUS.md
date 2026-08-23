@@ -15,7 +15,7 @@ R0: Complete
 Next phase: R1 Community Integration Spikes
 ```
 
-Public release remains `BLOCKED`。R1.1 `dsh-market` isolated integration spike 已完成，结论为 `DEFER`；未默认 bundle，未开始 `dsh-context`、`dsh-pet` 或其他功能实现。
+Public release remains `BLOCKED`。R1.1 `dsh-market` 与 R1.2 `dsh-context` isolated integration spike 已完成，结论均为 `DEFER`；未默认 bundle，未开始 `dsh-pet` 或其他功能实现。
 
 ## Git baseline
 
@@ -89,9 +89,20 @@ Installer、exe、namespace、mutex、artifact path 和默认 `0.2.0` build/vers
 - 维护 seam：上游 `v1.16.0` tag 的 `package.json` 与 lockfile 不一致，允许重锁后 source build 又缺少 `@deepseek-ai/schemastery`。
 - 决策：`DEFER`；不 default bundle、不 optional bundle、不 Fork。完整证据见 `research/R1_DSH_MARKET_SPIKE.md`。
 
+## R1.2 spike result
+
+- 精确基线：`dsh-context@0.19.1`，commit `aa768c76a1d875a413c13a213262c74f0187930f`。
+- 普通 DSH rc.6：Host/Client、`contextTimeline` / `contextHeaders`、Context tab 与 `/context`、两轮 provider 响应、reasoning、tool、abort、A/B、refresh、host restart 均 PASS；real compaction/prune 未测试。
+- 数值对照：启发式当前构成 `12,051` 等于官方 `contextBreakdown` 三项之和；最近一步实际 prompt `12,331` 等于 Orca exact input `171` + cache read `12,160`；provider-anchored occupancy `12,703` 与官方 `contextPressure.projectedTokens` 一致。
+- 共存：Liang effort slider、Orca Token Monitor 与 state projections 同时工作，无 key/slot/reducer collision。
+- 分发 seam：上游硬 peer 指向 rc.8；标准 add 将复制 seed 从 48 files / 43.98 MiB 重整为 1,047 files / 93.66 MiB，并重装/重链 Liang。完整 seed 可做到用户侧无需 npm/pnpm/git，但当前未设计 migration。
+- 隐私 seam：完整 prompt/reasoning/tool/system 内容只走本地 projection；未发现 telemetry/session upload。插件信息卡每小时最多访问一次 npm registry 查询最新版，不发送 session 内容。
+- 决策：`DEFER`；不 default bundle、不 optional bundle、不 Fork；同时停止自研通用 Orca Context Dashboard。完整证据见 `research/R1_DSH_CONTEXT_SPIKE.md`。
+
 ## 未验证
 
-- `dsh-context`、`dsh-pet` 与 Orca rc.6 的真实兼容性。
+- `dsh-pet` 与 Orca rc.6 的真实兼容性。
+- `dsh-context` 的 safely isolated WinForms/WebView2 E2E、真实 compaction/prune、长期会话性能、稳定 peer range 和 transitive license。
 - `dshmarket` 的 WinForms/WebView2 reference-host 隔离 E2E、Orca-private pnpm 方案、transitive license 和后续稳定 release。
 - WinForms/Setup 重启或重装后 credentials、sessions 和配置仍可读取的逐项隔离 smoke；当前只有隔离 DSH host restart 与卸载后真实 DSH_HOME 目录保留证据。
 - OrcaIntensityState 的 contract 和 portability。
@@ -110,4 +121,4 @@ Open public-release 和 release-candidate-only 项不阻止 R1 isolated communit
 
 ## Next Approved Work
 
-R0 已关闭。R1.1 已完成并停止。Next Approved Work：**R1.2 `dsh-context` isolated integration spike**。本次 closure 不启动 R1.2；不得自行开始 R1.3 `dsh-pet`、默认 bundle、runtime/toolchain 修改、installer 修改、DSH core 修改、tag 或 public release。
+R0 已关闭。R1.1 与 R1.2 已完成并停止。Next Approved Work：**R1.3 `dsh-pet` isolated integration spike**。本轮不启动 R1.3；不得自行默认 bundle、修改 runtime/toolchain、installer、DSH core、tag 或 public release。

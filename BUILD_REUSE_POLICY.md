@@ -42,7 +42,7 @@ Orca 自行拥有与其发行、兼容质量或专属体验直接相关的能力
 | Bundled Runtime | BUILD | 保留 private Node、固定 DSH 和离线运行能力。 |
 | Profile Migration | BUILD | 只迁移 Orca-owned bundles，不能成为通用 package manager。 |
 | Token Monitor | ADAPT | 保留 MVP 和 projection consumer；停止扩建 telemetry/analytics。 |
-| Context Monitor | REUSE | R1 评估 `dsh-context`；不写 Orca Context Dashboard。 |
+| Context Monitor | DEFER | R1.2 已验证 `dsh-context@0.19.1` 的普通 rc.6 Context UI、projection、语义与回放，但其项目过新、硬 peer 指向 rc.8，且标准安装会重整并显著扩大 profile 依赖图。当前不 bundle，也不写 Orca Context Dashboard。 |
 | Metrics Adapter | ADAPT | 保留 snapshot contract，未来缩薄 event parsing。 |
 | Activity Adapter | ADAPT | 保留稳定 enum，mapping 可改为官方/社区 projection。 |
 | Web Pet | REUSE / FORK | R1 优先评估 `dsh-pet`；只有 Orca renderer 差异明确时才受限 Fork。 |
@@ -124,3 +124,7 @@ REUSE / PIN / FORK / REJECT / DEFER
 ## R1.1 dsh-market decision
 
 `dshmarket@1.16.0`（commit `fa5200829cbcc2a0cb4b5e0d2199f74a26f928fc`）记录为 `DEFER`。直接 package 的 MIT 文本、published tarball 和普通 DSH rc.6 lifecycle 已验证；当前不进入 default/optional bundle。重新评估前必须解决 private pnpm 分发、上游 source reproducibility、社区插件 trust UX、精确依赖许可和安全隔离 E2E。详见 `research/R1_DSH_MARKET_SPIKE.md`。
+
+## R1.2 dsh-context decision
+
+`dsh-context@0.19.1`（commit `aa768c76a1d875a413c13a213262c74f0187930f`）记录为 `DEFER`。直接 package 的 Apache-2.0、普通 DSH rc.6 Host/Client、Context 语义、provider 对照、会话隔离和 projection 回放已验证；当前不进入 default/optional bundle，也不另建 Orca Context Dashboard。只有当 Orca 升级到晚于 rc.6 或与上游 peer 兼容的 DSH、按新基线重新测量 dependency graph、rc.8 peer duplication/profile expansion 不再造成不可接受的分发成本、可安全执行隔离 WinForms/WebView2 E2E，且 direct/transitive license 审计仍可接受时，才重新评估。详见 `research/R1_DSH_CONTEXT_SPIKE.md`。

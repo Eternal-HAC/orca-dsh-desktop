@@ -33,7 +33,7 @@ Orca-owned plugin packages are copied into the profile seed at build time。最�
 | --- | --- | --- | --- | --- |
 | `dsh-client-liang-intensity-skin` | `0.1.4` release tarball | Yes, current baseline | rc.6 WebView coexistence and effort interaction PASS | Redistribution evidence incomplete; formal release BLOCKED |
 | `dshmarket` | `1.16.0` / `fa5200829cbcc2a0cb4b5e0d2199f74a26f928fc` spike baseline | No | Ordinary rc.6 `dsh web`, Market UI and isolated fixture lifecycle PASS; Orca bundled-runtime-only package operations FAIL because private npm/corepack/pnpm is absent | R1.1 decision `DEFER`; direct package MIT evidence reviewed, transitive audit incomplete |
-| `dsh-context` | Not selected | No | Not tested | R1 candidate |
+| `dsh-context` | `0.19.1` / `aa768c76a1d875a413c13a213262c74f0187930f` spike baseline | No | Ordinary rc.6 `dsh web` Host/Client, Context projections, two-turn/provider/tool/abort lifecycle, A/B, refresh and host restart PASS; WinForms reference host NOT TESTABLE SAFELY | R1.2 decision `DEFER`; direct Apache-2.0 evidence reviewed, hard rc.8 peer and transitive audit remain open |
 | `dsh-pet` | Not selected | No | Not tested | R1 candidate; asset license must be audited |
 
 未测试项目不得描述为兼容、默认 bundle 或 Orca 官方支持。
@@ -43,6 +43,15 @@ R1.1 的详细证据见 `research/R1_DSH_MARKET_SPIKE.md`。该 PASS 只覆盖�
 - Ordinary `dsh web` rc.6：`TESTED`，Market Host/Web Client 与隔离 fixture lifecycle PASS。
 - Orca WinForms + WebView2 reference host：`NOT TESTED SAFELY`，当前 `App.cs` 固定真实 `%LOCALAPPDATA%\OrcaDSH`，本轮未增加测试 seam。
 - Orca full zero-setup plugin lifecycle：`FAIL / UNSUPPORTED`，当前 private runtime 不含 Market package operations 所需的 pnpm/npm/corepack。
+
+R1.2 的详细证据见 `research/R1_DSH_CONTEXT_SPIKE.md`：
+
+- Ordinary `dsh web` + Orca rc.6 baseline：`E2E PASS`，无需 Orca compatibility shim。
+- Upstream declared peer：`@deepseek-ai/dsh-session@^0.1.0-rc.8`；rc.6 的 empirical PASS 不代表上游正式支持 rc.6。
+- Orca WinForms + WebView2 reference host：`NOT TESTABLE SAFELY`。
+- Formal Orca bundle：`NOT APPROVED`；default bundle 与 optional bundle 均为 No。
+
+标准 add 重整了 profile 的 pnpm graph，并把文件数从 48 增至 1,047；该结果不构成默认 bundle 或长期 rc.6 支持承诺。
 
 ## Profile seed and migration
 
