@@ -20,6 +20,14 @@ $tokenMonitorPackageId = "dsh-client-orca-token-monitor"
 $tokenMonitorSource = Join-Path $root "plugins\$tokenMonitorPackageId"
 $intensityStatePackageId = "dsh-client-orca-intensity-state"
 $intensityStateSource = Join-Path $root "plugins\$intensityStatePackageId"
+$presentationPackageId = "dsh-client-orca-presentation"
+$presentationSource = Join-Path $root "plugins\$presentationPackageId"
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
+function Write-Utf8NoBom([string]$Path, [string]$Content) {
+    [System.IO.File]::WriteAllText($Path, $Content, $script:utf8NoBom)
+}
+
 New-Item -ItemType Directory -Force -Path $dist, $lib, $buildDir | Out-Null
 
 # ---------- 1. node.exe ----------
@@ -157,7 +165,7 @@ finally {
 
 $seedPackageJson = Join-Path $seedBuildHome "profiles\web\package.json"
 $seedSkinDir = Join-Path $seedBuildHome "profiles\web\node_modules\$skinPackageId"
-if (-not (Test-Path $seedPackageJson) -or -not (Test-Path $seedSkinDir) -or -not (Test-Path $stateAdaptersSource) -or -not (Test-Path $tokenMonitorSource) -or -not (Test-Path $intensityStateSource)) {
+if (-not (Test-Path $seedPackageJson) -or -not (Test-Path $seedSkinDir) -or -not (Test-Path $stateAdaptersSource) -or -not (Test-Path $tokenMonitorSource) -or -not (Test-Path $intensityStateSource) -or -not (Test-Path $presentationSource)) {
   throw "默认 skin profile seed 不完整"
 }
 $seedPackage = Get-Content -LiteralPath $seedPackageJson -Raw | ConvertFrom-Json
@@ -192,7 +200,15 @@ foreach ($runtimeItem in @("package.json", "cordis.patch.yml", "src", "lib")) {
 if ($intensityStatePackageId -notin @($seedPackage.dsh.profile.bundles)) {
     $seedPackage.dsh.profile.bundles += $intensityStatePackageId
 }
-$seedPackage | ConvertTo-Json -Depth 12 | Set-Content -Encoding utf8 -Path $seedPackageJson
+$seedPresentationDir = Join-Path $seedBuildHome "profiles\web\node_modules\$presentationPackageId"
+New-Item -ItemType Directory -Force -Path $seedPresentationDir | Out-Null
+foreach ($runtimeItem in @("package.json", "cordis.patch.yml", "src", "lib")) {
+    Copy-Item -LiteralPath (Join-Path $presentationSource $runtimeItem) -Destination $seedPresentationDir -Recurse -Force
+}
+if ($presentationPackageId -notin @($seedPackage.dsh.profile.bundles)) {
+    $seedPackage.dsh.profile.bundles += $presentationPackageId
+}
+Write-Utf8NoBom -Path $seedPackageJson -Content ($seedPackage | ConvertTo-Json -Depth 12)
 # The profile loader consumes package.json, bundle patches, and staged modules;
 # lock/workspace files are pnpm build metadata and can retain local paths.
 Remove-Item -LiteralPath (Join-Path $seedBuildHome "profiles\web\pnpm-lock.yaml"), (Join-Path $seedBuildHome "profiles\web\pnpm-workspace.yaml") -Force -ErrorAction SilentlyContinue

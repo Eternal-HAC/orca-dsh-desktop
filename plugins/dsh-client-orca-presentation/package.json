@@ -1,0 +1,36 @@
+{
+  "name": "dsh-client-orca-presentation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Orca-owned read-only Activity and reasoning-mode status companion for DeepSeek Harness.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "package.json",
+    "cordis.patch.yml",
+    "src",
+    "lib"
+  ],
+  "scripts": {
+    "test": "node ./test/presentation-smoke.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-modules",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-model-selection"
+      ]
+    }
+  }
+}

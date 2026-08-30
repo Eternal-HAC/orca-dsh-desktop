@@ -59,6 +59,9 @@ $dshPackage = Get-Content -LiteralPath $dshPackagePath -Raw | ConvertFrom-Json
 Assert-True ($dshPackage.name -eq "@deepseek-ai/dsh") "Unexpected DSH package name: $($dshPackage.name)"
 Assert-True ($dshPackage.version -eq "0.1.0-rc.6") "Unexpected DSH package version: $($dshPackage.version)"
 
+$profilePackageBytes = [System.IO.File]::ReadAllBytes($profilePackagePath)
+$profilePackageHasUtf8Bom = $profilePackageBytes.Length -ge 3 -and $profilePackageBytes[0] -eq 0xEF -and $profilePackageBytes[1] -eq 0xBB -and $profilePackageBytes[2] -eq 0xBF
+Assert-True (-not $profilePackageHasUtf8Bom) "Profile seed package.json must be UTF-8 without BOM for pinned DSH rc.6."
 $profilePackage = Get-Content -LiteralPath $profilePackagePath -Raw | ConvertFrom-Json
 $bundles = @($profilePackage.dsh.profile.bundles)
 $expectedPackages = [ordered]@{
@@ -66,6 +69,7 @@ $expectedPackages = [ordered]@{
     "orcadsh-state-adapters" = "0.1.0"
     "dsh-client-orca-token-monitor" = "0.1.0"
     "dsh-client-orca-intensity-state" = "0.1.0"
+    "dsh-client-orca-presentation" = "0.1.0"
 }
 
 foreach ($packageId in $expectedPackages.Keys) {
@@ -82,6 +86,7 @@ foreach ($packageId in $expectedPackages.Keys) {
 Assert-True (Test-Path -LiteralPath (Join-Path $profileRoot "node_modules\dsh-client-orca-token-monitor\lib\client.js") -PathType Leaf) "Token Monitor client entry missing."
 Assert-True (Test-Path -LiteralPath (Join-Path $profileRoot "node_modules\orcadsh-state-adapters\src\plugin.js") -PathType Leaf) "State adapter host entry missing."
 Assert-True (Test-Path -LiteralPath (Join-Path $profileRoot "node_modules\dsh-client-orca-intensity-state\lib\client.js") -PathType Leaf) "Intensity State client entry missing."
+Assert-True (Test-Path -LiteralPath (Join-Path $profileRoot "node_modules\dsh-client-orca-presentation\lib\client.js") -PathType Leaf) "Orca Presentation client entry missing."
 
 $unsafeFiles = Get-ChildItem -LiteralPath (Join-Path $ArtifactRoot "profile-seed") -Recurse -Force -ErrorAction Stop | Where-Object {
     $outsideNodeModules = $_.FullName -notmatch "[\\/]node_modules[\\/]"
