@@ -1,7 +1,7 @@
 # OrcaDSH Project Status
 
 状态：Canonical  
-更新时间：2026-08-23
+更新时间：2026-08-30
 
 ## 当前阶段
 
@@ -16,7 +16,10 @@ R1: Complete
 R2.1: Complete
 R2.2: Complete
 R2: Complete
-Next: R3 scope review / R3.1 presentation design
+R3.1: Complete
+R3.2: Complete
+R3: Complete
+Next: R4 option selection review
 ```
 
 Public release remains `BLOCKED`。R1.1 `dsh-market`、R1.2 `dsh-context` 与 R1.3 `@linxin666/dsh-pet` isolated integration spike 已完成，结论均为 `DEFER`；没有默认 bundle、optional bundle 或 Fork。R1 Complete 表示计划中的社区 integration candidates 已完成评估并记录产品决策，不表示任一社区插件获准进入 Orca distribution。
@@ -27,6 +30,7 @@ Public release remains `BLOCKED`。R1.1 `dsh-market`、R1.2 `dsh-context` 与 R1
 R0 release-gate/compliance baseline: 6588b449c8fb960e8c49fea57e1169baecbdcc92
 R1 reviewed milestone: bf9104c3a755685846f87aa50f5a9d4e61726e24
 R2 implementation milestone: 560eecde7702bb8a0423c2f3de24b1594286e354
+R3 implementation milestone: 8b7501a2f6ee2cf54cf9c8e63e6c39a80eb90efc
 ```
 
 Git is the source of truth for the live branch HEAD and remotes. This document records reviewed milestones rather than mutable branch pointers.
@@ -45,6 +49,8 @@ Git is the source of truth for the live branch HEAD and remotes. This document r
 - `orcadsh-state-adapters` Metrics / Activity projections。
 - `dsh-client-orca-token-monitor` 当前 session MVP。
 - `dsh-client-orca-intensity-state@0.1.0`：`OrcaIntensityStateV0` client-side pure mapper 与 active-session selector。
+- `dsh-client-orca-presentation@0.1.0`：standard DSH Web read-only Compact Hybrid Status Companion。
+- Repository-only WebView2 visual regression harness：`tests/OrcaWebView2Harness/` 与 `scripts/Test-OrcaPresentationVisual.ps1`。
 - existing-profile Orca-owned bundle incremental migration。
 
 ## 已验证
@@ -71,6 +77,11 @@ Git is the source of truth for the live branch HEAD and remotes. This document r
 | OrcaIntensity active-session lifecycle | PASS | A/B 切换、inactive-session isolation、同 session listener 不累积与 idempotent dispose。 |
 | OrcaIntensity rc.6 bundle/load smoke | PASS | 隔离 ordinary `dsh web`；manifest 与 served client entry 可读取。 |
 | OrcaIntensity target catalog portability | PASS (static) | `0.1.1-rc.2` 的 `off/low/high/max` fixture；不代表 target runtime compatibility。 |
+| R3.2 ordinary rc.6 DOM render | PASS | Standard `dsh web` client package；不依赖 WinForms-specific API。 |
+| R3.2 Microsoft WebView2 renderer/layout | PASS | Repository-only harness；real DOM、computed layout、full/compact/hidden。 |
+| R3.2 state/lifecycle boundary | PASS | 7 个 Activity 与 6 个 Intensity availability 均有 implementation/contract evidence；exact session propagation、timer/observer/slot/style cleanup 和 refresh re-derivation 已覆盖，real multi-session visual 未单独执行。 |
+| R3.2 coexistence / non-obstruction | PASS | Token Monitor 与 Liang development bundle 共存；相关 compact rect pairwise overlap 均为 false。 |
+| R3.2 PowerShell build compatibility | PASS | Windows PowerShell 5.1.26100.9168 与 PowerShell 7.6.4 full build；profile seed JSON no BOM，rc.6 parse PASS。 |
 
 ## 当前 release blockers
 
@@ -125,7 +136,9 @@ Installer、exe、namespace、mutex、artifact path 和默认 `0.2.0` build/vers
 - `dshmarket` 的 WinForms/WebView2 reference-host 隔离 E2E、Orca-private pnpm 方案、transitive license 和后续稳定 release。
 - WinForms/Setup 重启或重装后 credentials、sessions 和配置仍可读取的逐项隔离 smoke；当前只有隔离 DSH host restart 与卸载后真实 DSH_HOME 目录保留证据。
 - `0.1.1-rc.2` 的真实 runtime / WebView compatibility；当前只有 static catalog portability fixture。
-- OrcaIntensity 的 WinForms visual renderer E2E；R2 没有实现 renderer。
+- R3.2 presentation 在 production Orca App 中的 startup/exit lifecycle E2E；现有 PASS 来自 repository-only WebView2 harness。
+- R3.2 Setup install E2E 与 existing-profile migration E2E。
+- 正式 Orca 角色/人物素材的 provenance、授权与 release treatment；R3.2 仅使用仓库自有 inline SVG/CSS abstract glyph。
 - 未来 DSH 版本升级。
 - Liang 是否存在仓库外授权。
 - 研究报告中的动态 stars、plugin 数量和其他时间敏感生态数据。
@@ -137,8 +150,8 @@ Installer、exe、namespace、mutex、artifact path 和默认 `0.2.0` build/vers
 - **Public release blocker**：Liang redistribution rights unresolved；实际 bundled transitive dependency tree 的法律审计仍未完成。
 - **Release-candidate-only verification — DEFER TO R4**：候选 Setup 的 installed-tree LICENSE/NOTICE、restart/reinstall credentials/session/config readability，以及 Setup SHA/version/commit/evidence 对应。
 
-Open public-release 和 release-candidate-only 项不阻止 R1 isolated community integration spikes，但继续阻止任何 public OrcaDSH release。
+Open public-release 和 release-candidate-only 项不否定 R1–R3 已完成的研究、contract 与 presentation evidence，也不阻止下一阶段 option selection review，但继续阻止任何 public OrcaDSH release。
 
 ## Next Approved Work
 
-**Next: R3 scope review / R3.1 presentation design.** R3 may consume the reviewed Orca state boundary, but no renderer implementation is approved by this status update. The R1.1/R1.2/R1.3 candidates remain `DEFER`; no community capability is approved for default distribution. Public release remains `BLOCKED`.
+**Next: R4 option selection review.** Candidate A is Orca-owned Visual Identity / Character Asset work under explicit provenance and redistribution gates. Candidate B is a separately reviewed reasoning-effort write path over the frozen Intensity read state. No R4 implementation is approved by this status update. The R1.1/R1.2/R1.3 candidates remain `DEFER`; public release remains `BLOCKED`.

@@ -186,3 +186,17 @@ R2.1 contract reviewed; R2.2 implementation completed and reviewed.
 
 **Consequences:**
 v0 不包含 preview、source 或 recommendation 字段；preview 是 renderer-local transient state，recommendation 是未来独立状态/policy。R2 不安装社区插件、不升级 DSH、不改 installer，也不重构 profile migration；R2.2 仅沿用既有机制加入 Orca-owned bundle migration 条目。R2 不做 Pet renderer 或正式素材。R3 的任何 renderer 只能在 R2 contract 和素材授权通过后再提出。
+
+## 2026-08-30 — R3 首个 renderer 保持 read-only，WebView2 harness 仅作为开发测试工具
+
+**Decision:**
+`dsh-client-orca-presentation@0.1.0` 完成 R3 首个 read-only Compact Hybrid Status Companion。它只消费 exact-session `DshActivitySnapshot` 与 `OrcaIntensityStateV0`，不消费 Metrics，也不包含 effort write/control。`tests/OrcaWebView2Harness/` 与 `scripts/Test-OrcaPresentationVisual.ps1` 仅作为 repository-only developer visual regression tooling。
+
+**Reason:**
+标准 rc.6 DSH DOM、真实 Microsoft WebView2 computed layout、full/compact/hidden、Token Monitor/Liang development coexistence 与 non-obstruction 已有可重复证据。把 dedicated harness 当作 production surface 会夸大 App lifecycle、Setup 和 migration evidence；把 write path 合并进首版 renderer 会扩大状态所有权和失败恢复风险。
+
+**Status:**
+Accepted and implemented. R3 Complete。
+
+**Consequences:**
+Harness 不进入 profile seed、dist product tree、Setup 或 production App。Production App lifecycle、Setup install、existing-profile migration 与 target DSH runtime 继续保持 `NOT TESTED`。Effort control、正式角色素材、character system、animation framework 与 asset manager 均需后续独立 review，R3 closure 不构成批准。

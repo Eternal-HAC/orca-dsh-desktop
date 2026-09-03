@@ -80,6 +80,8 @@ Orca 固定并原样运行经过验证的 DSH 版本，不 fork、不 patch DSH 
 
 当前 `dsh-client-orca-token-monitor` 位于产品层。它读取当前 session 的 `orcaDshMetrics` 和 `orcaDshActivity` projection，不重新解析 SessionEvent。
 
+当前 `dsh-client-orca-presentation@0.1.0` 也位于产品层。它是 standard DSH Web read-only Compact Hybrid Status Companion，通过 exact slot `sessionId` 读取 `DshActivitySnapshot`，并从同一 session 的 ModelDirectory 派生 `OrcaIntensityStateV0`；它不消费 Metrics，不依赖 WinForms-specific API，也不拥有 effort write policy。
+
 R2.1/R2.2 的 Intensity contract/implementation 只表达 ordered presentation position，且按普通 session 派生：
 
 ```text
@@ -97,7 +99,7 @@ OrcaIntensityStateV0
 
 `normalizedPosition` 是当前 adapter-provided effort order 中的 `index / (count - 1)`，单档为 `0`；它不表示 reasoning power 百分比。Liang 的 0–30 视觉刻度不是 Orca 核心 abstraction。preview 是 renderer-local transient state，source 不属于 v0；R2 不产生 recommendation。selected 与 future recommended 仍必须独立，且 recommendation 不得隐式覆盖用户 effort。
 
-R3 renderer 的 Orca-owned input boundary 已冻结：`DshActivitySnapshot` 与 `OrcaIntensityStateV0` 为 required presentation inputs；`DshMetricsSnapshot` 仅在特定 presentation 有 reviewed need 时可选接入。renderer 不得直接解析 SessionEvent、读取 Liang frame/0–30 state、建立第二份 effort persistence、拥有 routing，或静默写入 selected effort。R3 首版保持 read-only presentation；effort control 是独立 review 的 write-path subphase。
+R3 renderer 的 Orca-owned input boundary 已冻结并由 `dsh-client-orca-presentation` 实现：`DshActivitySnapshot` 与 `OrcaIntensityStateV0` 为 required presentation inputs；`DshMetricsSnapshot` 未进入该 renderer，只能在特定 presentation 有 reviewed need 时可选接入。renderer 不得直接解析 SessionEvent、读取 Liang frame/0–30 state、建立第二份 effort persistence、拥有 routing，或静默写入 selected effort。R3 首版保持 read-only presentation；effort control 仍是独立 review 的 write-path subphase。
 
 ## Reference Host
 
@@ -121,10 +123,20 @@ DSH Session Events / provider usage
   orcadsh-state-adapters
        ├─ orcaDshMetrics
        └─ orcaDshActivity
-              ↓
- dsh-client-orca-token-monitor
-              ↓
- conversation.input.left
+              ├──────────────→ dsh-client-orca-token-monitor
+              │                         ↓
+              │                conversation.input.left
+              │
+              └─ DshActivitySnapshot ───────────────┐
+
+ Host ModelSelection + current ModelDirectory       │
+              ↓                                     │
+      OrcaIntensityStateV0                          │
+              └─────────────────────────────────────┤
+                                                    ↓
+                               dsh-client-orca-presentation
+                                                    ↓
+                                       conversation.input.left
 ```
 
 所有状态按 session 保存。active session 只是 Web client selector，不允许把多 session 数据折叠成不可恢复的全局计数器。

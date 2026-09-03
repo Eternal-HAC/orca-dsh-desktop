@@ -1,9 +1,9 @@
 # OrcaDSH Compatibility Baseline
 
 状态：Canonical, human-maintained  
-更新时间：2026-08-23
+更新时间：2026-08-30
 
-本文件记录已经验证的精确组合和升级 seam。它不是对所有 DSH 或社区插件的兼容承诺。当前字段仍在 R0 阶段，不创建 `compatibility.yaml`。
+本文件记录已经验证的精确组合和升级 seam。它不是对所有 DSH 或社区插件的兼容承诺。当前继续优先维护人类可读 contract，不创建 `compatibility.yaml`。
 
 ## Runtime baseline
 
@@ -25,6 +25,7 @@
 | `orcadsh-state-adapters` | `0.1.0` | Host Metrics/Activity projections | Profile seed bundle | rc.6 spike and runtime E2E PASS |
 | `dsh-client-orca-token-monitor` | `0.1.0` | Web current-session Monitor | Profile seed bundle | Real WebView E2E PASS |
 | `dsh-client-orca-intensity-state` | `0.1.0` | Client-side `OrcaIntensityStateV0` mapper / active-session selector | Profile seed bundle | rc.6 mapper tests and ordinary `dsh web` bundle/load smoke PASS; `0.1.1-rc.2` catalog fixture static PASS only |
+| `dsh-client-orca-presentation` | `0.1.0` | Read-only Compact Hybrid Status Companion | Profile seed bundle | Ordinary rc.6 DOM and Microsoft WebView2 renderer/layout PASS; Token Monitor and Liang development coexistence PASS; target runtime NOT TESTED |
 
 Orca-owned plugin packages are copied into the profile seed at build time。最终用户首次启动不运行 npm、pnpm 或 git。
 
@@ -69,11 +70,11 @@ R1.3 的详细证据见 `research/R1_DSH_PET_SPIKE.md`：
 
 - Setup 携带构建期生成的 `profile-seed`。
 - 当 `%LOCALAPPDATA%\OrcaDSH\profiles\web` 不存在时复制干净 seed。
-- Seed 包含 DSH base/web bundles、当前 Liang、Orca state adapters、Token Monitor 和 Intensity State mapper。
+- Seed 包含 DSH base/web bundles、当前 Liang、Orca state adapters、Token Monitor、Intensity State mapper 和 Orca Presentation。
 
 ### Existing profile
 
-- P0.9.1/R2.2 增量更新 `orcadsh-state-adapters`、`dsh-client-orca-token-monitor` 和 `dsh-client-orca-intensity-state`。
+- P0.9.1/R2.2/R3.2 增量更新 `orcadsh-state-adapters`、`dsh-client-orca-token-monitor`、`dsh-client-orca-intensity-state` 和 `dsh-client-orca-presentation`。
 - 只覆盖这些 Orca-owned package 目录。
 - 只在 `dsh.profile.bundles` 中追加缺失的 Orca bundle。
 - 不覆盖 credentials、sessions、其他 bundles、其他插件或用户配置。
@@ -107,10 +108,26 @@ R1.3 的详细证据见 `research/R1_DSH_PET_SPIKE.md`：
 | OrcaIntensity mapper contract / lifecycle | PASS in Node VM; catalog mapping, all availability states, selected/default separation, opaque IDs, duplicate/empty metadata, A/B isolation and dispose |
 | OrcaIntensity ordinary rc.6 `dsh web` bundle/load | PASS; isolated profile manifest and served client entry |
 | OrcaIntensity `0.1.1-rc.2` catalog portability | PASS (static fixture only); target runtime NOT TESTED |
+| Orca Presentation ordinary rc.6 DOM | PASS; standard DSH Web client package, no WinForms-specific API dependency |
+| Orca Presentation Microsoft WebView2 layout | PASS in repository-only harness; full/compact/hidden and computed non-overlap evidence |
+| Orca Presentation state/lifecycle boundary | PASS in implementation/contract tests; exact session propagation and cleanup covered, real multi-session visual not separately run |
+| Orca Presentation / Token Monitor coexistence | PASS |
+| Orca Presentation / Liang development coexistence | PASS; does not change Liang redistribution blocker |
+| Orca Presentation in production App lifecycle | NOT TESTED; harness evidence is not production-host startup/exit evidence |
+| Orca Presentation Setup / existing-profile migration | NOT TESTED |
+| Orca Presentation on DSH `0.1.1-rc.2` runtime | NOT TESTED |
 | Full WinForms/Setup restart or reinstall retains credentials, sessions and configuration | NOT TESTABLE without touching real `%LOCALAPPDATA%\OrcaDSH` or adding a test seam |
 | Uninstall removes app and preserves DSH_HOME | PASS |
 
 `RELEASE_CHECKLIST.md` 记录 AUTOMATED、MANUAL/E2E 和 RELEASE-ONLY 的职责边界。历史 PASS 仍需在每个候选 Setup 上重跑。
+
+## R3 Web presentation evidence
+
+`tests/OrcaWebView2Harness/` 与 `scripts/Test-OrcaPresentationVisual.ps1` 是 repository-only developer visual regression tooling，不进入 profile seed、dist product tree、Setup 或 production App。它们以独立 TEMP DSH_HOME 和 WebView2 user-data folder 验证 real rc.6 DOM、computed layout、responsive modes、Token Monitor/Liang development coexistence 与 input/send non-obstruction。
+
+`dsh-client-orca-presentation` 只消费 exact slot-session `DshActivitySnapshot` 与同 session 的 `OrcaIntensityStateV0`。Metrics 不进入 R3 MVP。full/compact/hidden 分别按实测 component/container width `>=520`、`360..519`、`<360` 切换；compact evidence 使用 700px WebView 和 519px measured responsive container。
+
+本阶段同时验证 build-generated `profile-seed/profiles/web/package.json` 使用 UTF-8 no BOM。Windows PowerShell 5.1.26100.9168 与 PowerShell 7.6.4 full build 均 PASS，bundled Node JSON parse 与 pinned rc.6 startup PASS；release baseline 会拒绝 `EF BB BF`。PS5.1 不传 `-ArtifactRoot` 时的 `$PSScriptRoot` default-parameter seam 仅是 developer test-script limitation，不是 production build blocker。
 
 ## Public release policy
 

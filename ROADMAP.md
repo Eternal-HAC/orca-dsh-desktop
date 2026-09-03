@@ -157,6 +157,8 @@ R3 may consume `DshActivitySnapshot` and `OrcaIntensityStateV0` as required inpu
 
 ## R3 — Orca Web Experience MVP
 
+阶段状态：**COMPLETE**（2026-08-30）。R3 Complete 仅覆盖首个 read-only Orca Web presentation、其标准 rc.6 Web client/real WebView2 evidence 与明确的测试边界；不表示 effort write path、正式角色素材、production App lifecycle、Setup/migration E2E 或 target DSH runtime 已完成。
+
 ### Goal
 
 用合法、可移植的素材和标准 DSH Web 插件形成首个真正差异化的 Orca experience。
@@ -191,6 +193,14 @@ R3 may consume `DshActivitySnapshot` and `OrcaIntensityStateV0` as required inpu
 - Orca Web plugin/package。
 - 合法素材与 attribution 清单。
 - Web E2E evidence。
+
+### R3 closure disposition
+
+- `dsh-client-orca-presentation@0.1.0` 作为标准 DSH Web client package 完成；required inputs 为 `DshActivitySnapshot` 与 `OrcaIntensityStateV0`，未消费 Metrics，首版保持 read-only。
+- 唯一图形素材为仓库自有 inline SVG/CSS abstract Orca glyph；无 CDN、Liang asset、外部 sprite 或正式人物素材。该代码随仓库 LICENSE 管理，正式角色资产仍需独立 provenance/release review。
+- Repository-only Microsoft WebView2 harness 已验证 real rc.6 DOM、computed layout、full/compact/hidden、Token Monitor/Liang development coexistence 和 non-obstruction。
+- Production Orca App lifecycle、Setup install、existing-profile migration 与 `0.1.1-rc.2` runtime 继续保持 `NOT TESTED`，但它们不是现有 R3 exit criteria。
+- 下一阶段只进入 option selection review：Visual Identity / Character Asset 与 Effort Control Write Path 均需单独批准，R3 closure 不自动授权其中任何一项。
 
 ## R4 — Curated Distribution Release
 
